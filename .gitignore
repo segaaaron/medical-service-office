@@ -1,0 +1,53 @@
+# --- Dependencias ---
+node_modules/
+dist/
+build/
+.npm
+.eslintcache
+
+# --- Variables de Entorno (CRÍTICO) ---
+# Nunca subas tus secrets ni la URL de tu base de datos
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+sync-gateway-config.json
+
+# --- Prisma ---
+# No ignoramos la carpeta 'prisma' completa porque necesitamos el schema.prisma
+# Pero sí ignoramos los archivos generados localmente o temporales
+/prisma/migrations-lock.toml
+/prisma/*.db
+/prisma/*.db-journal
+
+# Si usas SQLite localmente para pruebas, ignora la base de datos
+*.db
+*.db-journal
+
+# --- Logs y Debug ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+pnpm-debug.log*
+
+# --- Sistema y Editores ---
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Testing ---
+coverage/
+.nyc_output
+
+# --- Docker (Opcional) ---
+.dockerignore
+# Si usas docker-compose y generas archivos de datos locales
+docker-data/
