@@ -39,7 +39,7 @@ const corsOptions = isProduction
     };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // pre-flight for all routes
+app.options('/{*path}', cors(corsOptions)); // pre-flight for all routes
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
