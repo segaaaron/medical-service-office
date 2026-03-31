@@ -1,9 +1,14 @@
 const { Router } = require('express');
 const { login, refresh, logout } = require('../controllers/auth.controller');
+const { createRateLimit } = require('../middlewares/rate-limit.middleware');
+const { validate } = require('../middlewares/validate.middleware');
+const { loginSchema } = require('../schemas/index');
+
+const loginRateLimit = createRateLimit(10, 15 * 60 * 1000); // 10 req / 15 min
 
 const router = Router();
 
-router.post('/login', login);
+router.post('/login', loginRateLimit, validate(loginSchema), login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 

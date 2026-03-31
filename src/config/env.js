@@ -20,4 +20,6 @@ module.exports = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  // Optional: comma-separated list of allowed origins in production
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '',
 };
