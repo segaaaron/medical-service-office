@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office -not -path */node_modules/* -not -path */.git/* -not -path */.DS_Store -type f)",
+      "Bash(wc:*)"
+    ]
+  }
+}
