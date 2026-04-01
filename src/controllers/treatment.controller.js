@@ -1,21 +1,12 @@
 const prisma = require('../services/prisma.service');
-
-function toSlug(text) {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-}
+const { toSlug } = require('../utils/slug');
 
 async function listTreatments(req, res, next) {
   try {
     const { category, active } = req.query;
-    const where = {};
+    // Default to active treatments only; pass active=false to see inactive
+    const where = { active: active !== undefined ? active === 'true' : true };
     if (category) where.category = category;
-    if (active !== undefined) where.active = active === 'true';
 
     const treatments = await prisma.treatment.findMany({
       where,

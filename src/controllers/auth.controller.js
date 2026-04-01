@@ -29,9 +29,15 @@ async function login(req, res, next) {
     const refreshToken = generateRefreshToken(user.id);
 
     const expiresAt = new Date(Date.now() + ms(JWT_REFRESH_EXPIRES_IN));
-    await prisma.refreshToken.create({
-      data: { token: refreshToken, userId: user.id, expiresAt },
-    });
+    // Persist new token and clean up expired tokens for this user in one go
+    await prisma.$transaction([
+      prisma.refreshToken.create({
+        data: { token: refreshToken, userId: user.id, expiresAt },
+      }),
+      prisma.refreshToken.deleteMany({
+        where: { userId: user.id, expiresAt: { lt: new Date() } },
+      }),
+    ]);
 
     return res.json({
       accessToken,

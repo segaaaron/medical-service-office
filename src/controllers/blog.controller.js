@@ -1,20 +1,11 @@
 const prisma = require('../services/prisma.service');
-
-function toSlug(text) {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-}
+const { toSlug } = require('../utils/slug');
 
 async function listPosts(req, res, next) {
   try {
     const { published } = req.query;
-    const where = {};
-    if (published !== undefined) where.published = published === 'true';
+    // Default to published posts only; pass published=false to see drafts (protected route)
+    const where = { published: published !== undefined ? published === 'true' : true };
 
     const posts = await prisma.blogPost.findMany({
       where,

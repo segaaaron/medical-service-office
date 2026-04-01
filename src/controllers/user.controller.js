@@ -37,11 +37,19 @@ async function getUser(req, res, next) {
   }
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 async function createUser(req, res, next) {
   try {
     const { email, name, password } = req.body;
     if (!email || !name || !password) {
       return res.status(400).json({ error: 'email, name, and password are required' });
+    }
+    if (!EMAIL_RE.test(email)) {
+      return res.status(400).json({ error: 'email must be a valid email address' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'password must be at least 8 characters' });
     }
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await prisma.user.create({
