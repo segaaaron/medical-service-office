@@ -12,9 +12,9 @@ const { createTreatmentSchema } = require('../schemas/index');
 
 const router = Router();
 
-// Public — anyone can view treatments
-router.get('/', listTreatments);
-router.get('/:id', getTreatment);
+// Protected — valid token required to view treatments
+router.get('/', authenticate, listTreatments);
+router.get('/:id', authenticate, getTreatment);
 
 // Protected — only authenticated admins
 router.post('/', authenticate, validate(createTreatmentSchema), createTreatment);
