@@ -15,6 +15,7 @@ async function listPosts(req, res, next) {
         title: true,
         slug: true,
         excerpt: true,
+        content: true,
         imageUrl: true,
         published: true,
         publishedAt: true,

@@ -8,7 +8,7 @@ const {
   deletePost,
 } = require('../controllers/blog.controller');
 const { validate } = require('../middlewares/validate.middleware');
-const { createBlogPostSchema } = require('../schemas/index');
+const { createBlogPostSchema, updateBlogPostSchema } = require('../schemas/index');
 
 const router = Router();
 
@@ -18,7 +18,7 @@ router.get('/:id', getPost);
 
 // Protected — only authenticated admins
 router.post('/', authenticate, validate(createBlogPostSchema), createPost);
-router.put('/:id', authenticate, validate(createBlogPostSchema), updatePost);
+router.put('/:id', authenticate, validate(updateBlogPostSchema), updatePost);
 router.delete('/:id', authenticate, deletePost);
 
 module.exports = router;

@@ -247,10 +247,67 @@ const upsertSiteContentSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// updateBlogPostSchema — all fields optional for partial updates
+// ---------------------------------------------------------------------------
+const updateBlogPostSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (data.title !== undefined && data.title !== null) {
+      if (!isString(data.title) || data.title.trim().length < 1 || data.title.trim().length > 300) {
+        errors.push(err('title', 'Title must be between 1 and 300 characters'));
+      } else {
+        out.title = data.title.trim();
+      }
+    }
+
+    if (data.content !== undefined && data.content !== null) {
+      if (!isString(data.content) || data.content.trim().length < 1) {
+        errors.push(err('content', 'Content must be a non-empty string'));
+      } else {
+        out.content = data.content;
+      }
+    }
+
+    if (data.excerpt !== undefined && data.excerpt !== null) {
+      if (!isString(data.excerpt)) {
+        errors.push(err('excerpt', 'Excerpt must be a string'));
+      } else {
+        out.excerpt = data.excerpt;
+      }
+    }
+
+    if (data.imageUrl !== undefined && data.imageUrl !== null) {
+      if (data.imageUrl !== '' && (!isString(data.imageUrl) || !URL_RE.test(data.imageUrl))) {
+        errors.push(err('imageUrl', 'Image URL must be a valid http/https URL or empty string'));
+      } else {
+        out.imageUrl = data.imageUrl;
+      }
+    }
+
+    if (data.published !== undefined) {
+      if (!isBoolean(data.published)) {
+        errors.push(err('published', 'Published must be a boolean'));
+      } else {
+        out.published = data.published;
+      }
+    }
+
+    if (Object.keys(out).length === 0 && errors.length === 0) {
+      errors.push(err('body', 'At least one field must be provided for update'));
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
   createTreatmentSchema,
   createBlogPostSchema,
+  updateBlogPostSchema,
   createAppointmentSchema,
   upsertSiteContentSchema,
 };
