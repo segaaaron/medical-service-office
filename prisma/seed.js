@@ -216,6 +216,178 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
       console.log(`Appointment already exists: ${a.patientName} - ${a.treatmentName}`);
     }
   }
+  // ── Site Content (Dashboard Home) ─────────────────────────────────────
+  const defaultSiteContent = {
+    branding: {
+      doctorName: 'Dra. Yasmin Medrano Avila',
+      specialty: 'Medicina Estética Avanzada',
+      city: 'Santa Cruz de la Sierra',
+      whatsappNumber: '+59178751894',
+      whatsappUrl: 'https://wa.me/59178751894',
+      heroTagline: 'Realza tu belleza natural con tratamientos estéticos de vanguardia',
+      heroSubtitle: 'Medicina estética avanzada con resultados naturales y seguros',
+      heroBackgroundImage: '',
+      aboutImage: '',
+      aboutBadge: 'Más de 10 años de experiencia',
+      footerDescription: 'Consultorio especializado en medicina estética avanzada.',
+      copyright: '© 2026 Dra. Yasmin Medrano Avila. Todos los derechos reservados.',
+    },
+    sectionHeaders: {
+      value: { title: 'Nuestros Valores', subtitle: '¿Por qué elegirnos?' },
+      course: { title: 'Agenda tu Cita', subtitle: 'Tratamientos personalizados' },
+      presets: { title: 'Tratamientos Destacados', subtitle: 'Conoce nuestras especialidades' },
+      freeResources: { title: 'Recursos Gratuitos', subtitle: 'Guías para tu cuidado personal' },
+      faq: { title: 'Preguntas Frecuentes', subtitle: 'Resolvemos tus dudas' },
+    },
+    promoBanner: {
+      text: '¡Promo especial! Biorevitalización NCTF 135 HA con 20% de descuento',
+      ctaLabel: 'Agendar por WhatsApp',
+      ctaHref: 'https://wa.me/59178751894?text=Hola%20quiero%20info%20de%20la%20promo%20NCTF',
+    },
+    promoPopup: {
+      emoji: '🎉',
+      label: 'Oferta Especial',
+      title: 'Primera consulta de valoración GRATIS',
+      description: 'Agenda tu consulta de valoración sin costo y descubre el tratamiento ideal para ti.',
+      location: 'Santa Cruz de la Sierra',
+      ctaLabel: 'Agendar Ahora',
+      ctaHref: 'https://wa.me/59178751894?text=Hola%20quiero%20agendar%20una%20consulta%20de%20valoracion',
+      dismissLabel: 'Ahora no, gracias',
+    },
+    heroStats: [
+      { value: '10+', label: 'Años de experiencia' },
+      { value: '5000+', label: 'Pacientes atendidos' },
+      { value: '30+', label: 'Tratamientos' },
+    ],
+    heroCTAs: [
+      { label: 'Ver Tratamientos', href: '/tratamientos', variant: 'primary' },
+      { label: 'Agendar Cita', href: '/contacto', variant: 'secondary' },
+    ],
+    valueFeatures: [
+      { iconName: 'Sparkles', title: 'Resultados Naturales', description: 'Técnicas avanzadas que realzan tu belleza sin alterar tu esencia.' },
+      { iconName: 'Shield', title: 'Tecnología de Punta', description: 'Equipos de última generación para tratamientos seguros y efectivos.' },
+      { iconName: 'Heart', title: 'Atención Personalizada', description: 'Cada tratamiento es diseñado específicamente para tus necesidades.' },
+      { iconName: 'Star', title: 'Bienestar Integral', description: 'Enfoque holístico que cuida tu salud y apariencia por igual.' },
+    ],
+    courseIncluded: [
+      { iconName: 'CheckCircle', text: 'Valoración inicial personalizada' },
+      { iconName: 'CheckCircle', text: 'Plan de tratamiento a medida' },
+      { iconName: 'CheckCircle', text: 'Seguimiento post-tratamiento' },
+      { iconName: 'CheckCircle', text: 'Productos de grado médico' },
+      { iconName: 'CheckCircle', text: 'Ambiente seguro y confortable' },
+      { iconName: 'CheckCircle', text: 'Resultados garantizados' },
+    ],
+    courseModules: [
+      { title: 'Toxina Botulínica (Botox)' },
+      { title: 'Rellenos con Ácido Hialurónico' },
+      { title: 'Bioestimulación con Polinucleótidos' },
+      { title: 'Skinbooster / Hidratación Profunda' },
+      { title: 'Mesoterapia Facial' },
+      { title: 'Radiofrecuencia Facial y Corporal' },
+      { title: 'Depilación Láser' },
+      { title: 'Tratamiento de Manchas' },
+      { title: 'Peeling Químico' },
+      { title: 'Reducción de Medidas Corporales' },
+      { title: 'Tratamiento de Celulitis' },
+      { title: 'Tratamiento de Estrías' },
+    ],
+    coursePricing: {
+      earlyBird: 0,
+      regular: 150000,
+      currency: '$',
+      savings: 150000,
+    },
+    presets: [
+      { name: 'Tratamientos Faciales', description: 'Botox, rellenos, skinbooster y más para rejuvenecer tu rostro.', tag: 'Popular', tagColor: 'blue' },
+      { name: 'Medicina Regenerativa', description: 'Bioestimuladores de colágeno y polinucleótidos para regeneración natural.', tag: 'Innovador', tagColor: 'green' },
+      { name: 'Tratamientos Corporales', description: 'Reducción de medidas, celulitis y tonificación corporal.', tag: 'Resultados', tagColor: 'purple' },
+      { name: 'Depilación Láser', description: 'Eliminación definitiva del vello con tecnología láser de última generación.', tag: 'Permanente', tagColor: 'pink' },
+      { name: 'Hidratación y Nutrición', description: 'Mesoterapia y protocolos de nutrición cutánea profunda.', tag: 'Bienestar', tagColor: 'teal' },
+      { name: 'Estrías y Cicatrices', description: 'Tratamientos especializados para mejorar la textura de la piel.', tag: 'Especializado', tagColor: 'orange' },
+    ],
+    freePDFs: [
+      { title: 'Guía de Medicina Facial', description: 'Todo lo que necesitas saber antes de tu primer tratamiento estético.', icon: 'FileText' },
+      { title: 'Preparación para tu Consulta', description: 'Cómo prepararte para obtener los mejores resultados.', icon: 'ClipboardList' },
+      { title: 'Cuidados Post-Tratamiento', description: 'Guía completa de cuidados después de tu procedimiento.', icon: 'Heart' },
+    ],
+    freeResourcesForm: {
+      heading: 'Descarga tu guía gratuita',
+      description: 'Ingresa tu correo electrónico y recibe nuestra guía de cuidados estéticos.',
+      placeholder: 'tu@email.com',
+      buttonLabel: 'Descargar Guía',
+      privacyText: 'Respetamos tu privacidad. No compartimos tu información.',
+      successTitle: '¡Listo!',
+      successMessage: 'Revisa tu bandeja de entrada para descargar tu guía.',
+    },
+    about: {
+      bio: [
+        'La Dra. Yasmin Medrano Avila es especialista en Medicina Estética Avanzada con más de 10 años de experiencia en tratamientos faciales y corporales.',
+        'Formada en las mejores instituciones de Latinoamérica y Europa, combina técnica de vanguardia con un enfoque natural y personalizado para cada paciente.',
+        'Su filosofía se centra en realzar la belleza natural de cada persona, utilizando los tratamientos más seguros y efectivos disponibles en la medicina estética moderna.',
+      ],
+      stats: [
+        { value: '10+', label: 'Años de experiencia' },
+        { value: '5000+', label: 'Pacientes atendidos' },
+        { value: '30+', label: 'Tratamientos disponibles' },
+      ],
+    },
+    faqs: [
+      { question: '¿Los tratamientos estéticos son seguros?', answer: 'Sí, todos nuestros tratamientos son realizados por profesionales certificados con productos aprobados por las autoridades sanitarias.' },
+      { question: '¿Cuánto dura el efecto del Botox?', answer: 'El efecto del Botox dura entre 4 y 6 meses, dependiendo del metabolismo de cada paciente y la zona tratada.' },
+      { question: '¿Los tratamientos son dolorosos?', answer: 'La mayoría de los tratamientos son mínimamente invasivos. Utilizamos anestesia tópica para garantizar tu comodidad.' },
+      { question: '¿Cuántas sesiones necesito?', answer: 'Depende del tratamiento y tus objetivos. En la consulta de valoración diseñamos un plan personalizado.' },
+      { question: '¿Qué formación tiene la Dra. Medrano?', answer: 'La Dra. Medrano cuenta con especialización en medicina estética avanzada y certificaciones internacionales en las técnicas más actuales.' },
+    ],
+    navLinks: [
+      { label: 'Inicio', href: '/' },
+      { label: 'Tratamientos', href: '/tratamientos' },
+      { label: 'Nosotros', href: '/nosotros' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Contacto', href: '/contacto' },
+    ],
+    footerGroups: [
+      {
+        title: 'Tratamientos Faciales',
+        links: [
+          { label: 'Toxina Botulínica', href: '/tratamientos' },
+          { label: 'Ácido Hialurónico', href: '/tratamientos' },
+          { label: 'Skinbooster', href: '/tratamientos' },
+          { label: 'Mesoterapia Facial', href: '/tratamientos' },
+        ],
+      },
+      {
+        title: 'Tratamientos Corporales',
+        links: [
+          { label: 'Depilación Láser', href: '/tratamientos' },
+          { label: 'Reducción de Medidas', href: '/tratamientos' },
+          { label: 'Tratamiento de Celulitis', href: '/tratamientos' },
+          { label: 'Radiofrecuencia', href: '/tratamientos' },
+        ],
+      },
+      {
+        title: 'Consultorio',
+        links: [
+          { label: 'Sobre Nosotros', href: '/nosotros' },
+          { label: 'Blog', href: '/blog' },
+          { label: 'Contacto', href: '/contacto' },
+        ],
+      },
+      {
+        title: 'Legal',
+        links: [
+          { label: 'Aviso de Privacidad', href: '/privacidad' },
+          { label: 'Términos y Condiciones', href: '/terminos' },
+        ],
+      },
+    ],
+  };
+
+  const siteContent = await prisma.siteContent.upsert({
+    where: { key: 'main' },
+    update: { value: defaultSiteContent },
+    create: { key: 'main', value: defaultSiteContent },
+  });
+  console.log(`SiteContent upserted: key=${siteContent.key}`);
 }
 
 main()

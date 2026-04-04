@@ -219,9 +219,38 @@ const createAppointmentSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// upsertSiteContentSchema
+// ---------------------------------------------------------------------------
+const VALID_SITE_CONTENT_KEYS = ['main', 'branding', 'hero', 'value', 'course', 'presets', 'about', 'faqs', 'footer', 'promoBanner', 'promoPopup', 'freePDFs', 'freeResourcesForm', 'sectionHeaders'];
+
+const upsertSiteContentSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (!isString(data.key) || data.key.trim().length < 1 || data.key.trim().length > 100) {
+      errors.push(err('key', 'Key must be a string between 1 and 100 characters'));
+    } else {
+      out.key = data.key.trim();
+    }
+
+    if (data.value === undefined || data.value === null) {
+      errors.push(err('value', 'Value is required and must be a valid JSON object'));
+    } else if (typeof data.value !== 'object') {
+      errors.push(err('value', 'Value must be a JSON object'));
+    } else {
+      out.value = data.value;
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
   createTreatmentSchema,
   createBlogPostSchema,
   createAppointmentSchema,
+  upsertSiteContentSchema,
 };
