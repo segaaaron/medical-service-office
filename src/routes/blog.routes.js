@@ -12,9 +12,9 @@ const { createBlogPostSchema } = require('../schemas/index');
 
 const router = Router();
 
-// Protected — valid token required to view blog posts
-router.get('/', authenticate, listPosts);
-router.get('/:id', authenticate, getPost);
+// Public — allow the website to load blog posts without authentication
+router.get('/', listPosts);
+router.get('/:id', getPost);
 
 // Protected — only authenticated admins
 router.post('/', authenticate, validate(createBlogPostSchema), createPost);
