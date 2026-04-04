@@ -74,14 +74,30 @@ async function updatePost(req, res, next) {
   try {
     const { title, excerpt, content, imageUrl, published } = req.body;
     const data = {};
-    if (title !== undefined) { data.title = title; data.slug = toSlug(title); }
+
+    // Fetch current post if we need to compare slug or set publishedAt
+    let current = null;
+    if (title !== undefined || (published === true || published === 'true')) {
+      current = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+      if (!current) return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (title !== undefined) {
+      data.title = title;
+      const newSlug = toSlug(title);
+      // Only update slug if it actually changed to avoid false P2002 on self-update
+      if (!current || current.slug !== newSlug) data.slug = newSlug;
+    }
+
     if (excerpt !== undefined) data.excerpt = excerpt;
     if (content !== undefined) data.content = content;
     if (imageUrl !== undefined) data.imageUrl = imageUrl;
-    data.published = published === true || published === 'true';
-    if (data.published) {
-      const current = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
-      if (current && !current.publishedAt) data.publishedAt = new Date();
+
+    if (published !== undefined) {
+      data.published = published === true || published === 'true';
+      if (data.published && current && !current.publishedAt) {
+        data.publishedAt = new Date();
+      }
     }
 
     const post = await prisma.blogPost.update({
