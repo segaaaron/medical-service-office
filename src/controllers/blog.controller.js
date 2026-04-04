@@ -81,9 +81,10 @@ async function updatePost(req, res, next) {
 
     if (title !== undefined) {
       data.title = title;
-      const newSlug = toSlug(title);
-      // Only update slug if it actually changed to avoid false P2002 on self-update
-      if (current.slug !== newSlug) data.slug = newSlug;
+      // Only regenerate slug when the title text actually changed
+      if (title !== current.title) {
+        data.slug = toSlug(title);
+      }
     }
 
     if (excerpt !== undefined) data.excerpt = excerpt;
