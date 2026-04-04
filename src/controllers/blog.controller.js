@@ -78,12 +78,10 @@ async function updatePost(req, res, next) {
     if (excerpt !== undefined) data.excerpt = excerpt;
     if (content !== undefined) data.content = content;
     if (imageUrl !== undefined) data.imageUrl = imageUrl;
-    if (published !== undefined) {
-      data.published = published === true || published === 'true';
-      if (data.published) {
-        const current = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
-        if (current && !current.publishedAt) data.publishedAt = new Date();
-      }
+    data.published = published === true || published === 'true';
+    if (data.published) {
+      const current = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+      if (current && !current.publishedAt) data.publishedAt = new Date();
     }
 
     const post = await prisma.blogPost.update({
