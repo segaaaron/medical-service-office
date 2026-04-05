@@ -307,6 +307,84 @@ const updateBlogPostSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// upsertContactSchema
+// ---------------------------------------------------------------------------
+const upsertContactSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (!isString(data.whatsappNumber) || data.whatsappNumber.trim().length < 1) {
+      errors.push(err('whatsappNumber', 'WhatsApp number is required'));
+    } else {
+      out.whatsappNumber = data.whatsappNumber.trim();
+    }
+
+    if (!isString(data.whatsappUrl) || data.whatsappUrl.trim().length < 1) {
+      errors.push(err('whatsappUrl', 'WhatsApp URL is required'));
+    } else {
+      out.whatsappUrl = data.whatsappUrl.trim();
+    }
+
+    if (!isString(data.phone) || data.phone.trim().length < 1) {
+      errors.push(err('phone', 'Phone number is required'));
+    } else {
+      out.phone = data.phone.trim();
+    }
+
+    if (!isString(data.instagramUsername) || data.instagramUsername.trim().length < 1) {
+      errors.push(err('instagramUsername', 'Instagram username is required'));
+    } else {
+      out.instagramUsername = data.instagramUsername.trim();
+    }
+
+    if (!isString(data.instagramUrl) || data.instagramUrl.trim().length < 1) {
+      errors.push(err('instagramUrl', 'Instagram URL is required'));
+    } else {
+      out.instagramUrl = data.instagramUrl.trim();
+    }
+
+    if (!isString(data.facebookName) || data.facebookName.trim().length < 1) {
+      errors.push(err('facebookName', 'Facebook page name is required'));
+    } else {
+      out.facebookName = data.facebookName.trim();
+    }
+
+    if (!isString(data.facebookUrl) || data.facebookUrl.trim().length < 1) {
+      errors.push(err('facebookUrl', 'Facebook URL is required'));
+    } else {
+      out.facebookUrl = data.facebookUrl.trim();
+    }
+
+    if (!isString(data.mondayFridayHours) || data.mondayFridayHours.trim().length < 1) {
+      errors.push(err('mondayFridayHours', 'Monday–Friday hours are required'));
+    } else {
+      out.mondayFridayHours = data.mondayFridayHours.trim();
+    }
+
+    if (!isString(data.saturdayHours) || data.saturdayHours.trim().length < 1) {
+      errors.push(err('saturdayHours', 'Saturday hours are required'));
+    } else {
+      out.saturdayHours = data.saturdayHours.trim();
+    }
+
+    if (!isString(data.sundayStatus) || data.sundayStatus.trim().length < 1) {
+      errors.push(err('sundayStatus', 'Sunday status is required'));
+    } else {
+      out.sundayStatus = data.sundayStatus.trim();
+    }
+
+    if (!isString(data.locationDescription) || data.locationDescription.trim().length < 1) {
+      errors.push(err('locationDescription', 'Location description is required'));
+    } else {
+      out.locationDescription = data.locationDescription.trim();
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
   createTreatmentSchema,
@@ -314,4 +392,5 @@ module.exports = {
   updateBlogPostSchema,
   createAppointmentSchema,
   upsertSiteContentSchema,
+  upsertContactSchema,
 };
