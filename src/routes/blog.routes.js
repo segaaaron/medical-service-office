@@ -17,9 +17,15 @@ const router = Router();
 router.get('/', listPosts);
 router.get('/:id', getPost);
 
+// Merge uploaded image URL into req.body so the validation schema can see it
+function mergeImageUrl(req, res, next) {
+  if (req.imageUrl) req.body.imageUrl = req.imageUrl;
+  next();
+}
+
 // Protected — only authenticated admins
-router.post('/', authenticate, upload.single('image'), compressAndSave, validate(createBlogPostSchema), createPost);
-router.put('/:id', authenticate, upload.single('image'), compressAndSave, validate(updateBlogPostSchema), updatePost);
+router.post('/', authenticate, upload.single('image'), compressAndSave, mergeImageUrl, validate(createBlogPostSchema), createPost);
+router.put('/:id', authenticate, upload.single('image'), compressAndSave, mergeImageUrl, validate(updateBlogPostSchema), updatePost);
 router.delete('/:id', authenticate, deletePost);
 
 // Subida y compresión de imagen

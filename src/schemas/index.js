@@ -150,10 +150,12 @@ const createBlogPostSchema = {
     }
 
     if (data.published !== undefined) {
-      if (!isBoolean(data.published)) {
-        errors.push(err('published', 'Published must be a boolean'));
+      if (data.published === true || data.published === 'true') {
+        out.published = true;
+      } else if (data.published === false || data.published === 'false') {
+        out.published = false;
       } else {
-        out.published = data.published;
+        errors.push(err('published', 'Published must be a boolean'));
       }
     }
 

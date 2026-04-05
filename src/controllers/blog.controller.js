@@ -108,6 +108,9 @@ async function updatePost(req, res, next) {
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Post not found' });
     if (err.code === 'P2002') return res.status(409).json({ error: 'A post with this title already exists' });
+    if (err.code === 'P2023' || err.name === 'PrismaClientValidationError') {
+      return res.status(400).json({ error: 'Invalid post ID format' });
+    }
     next(err);
   }
 }
