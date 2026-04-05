@@ -140,8 +140,8 @@ const createBlogPostSchema = {
     }
 
     if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !URL_RE.test(data.imageUrl)) {
-        errors.push(err('imageUrl', 'Image URL must be a valid http/https URL or empty string'));
+      if (!isString(data.imageUrl)) {
+        errors.push(err('imageUrl', 'Image URL must be a string'));
       } else {
         out.imageUrl = data.imageUrl;
       }
@@ -280,8 +280,8 @@ const updateBlogPostSchema = {
     }
 
     if (data.imageUrl !== undefined && data.imageUrl !== null) {
-      if (data.imageUrl !== '' && (!isString(data.imageUrl) || !URL_RE.test(data.imageUrl))) {
-        errors.push(err('imageUrl', 'Image URL must be a valid http/https URL or empty string'));
+      if (!isString(data.imageUrl)) {
+        errors.push(err('imageUrl', 'Image URL must be a string'));
       } else {
         out.imageUrl = data.imageUrl;
       }

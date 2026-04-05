@@ -40,7 +40,8 @@ async function getPost(req, res, next) {
 
 async function createPost(req, res, next) {
   try {
-    const { title, excerpt, content, imageUrl, published } = req.body;
+    const { title, excerpt, content, published } = req.body;
+    const imageUrl = req.imageUrl ?? req.body.imageUrl;
     if (!title || !content) {
       return res.status(400).json({ error: 'title and content are required' });
     }
@@ -70,7 +71,8 @@ async function createPost(req, res, next) {
 
 async function updatePost(req, res, next) {
   try {
-    const { title, excerpt, content, imageUrl, published } = req.body;
+    const { title, excerpt, content, published } = req.body;
+    const imageUrl = req.imageUrl ?? req.body.imageUrl;
     const data = {};
 
     // Always fetch current post to validate existence and support publishedAt logic
