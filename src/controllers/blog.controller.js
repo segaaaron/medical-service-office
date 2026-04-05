@@ -120,4 +120,8 @@ async function deletePost(req, res, next) {
   }
 }
 
-module.exports = { listPosts, getPost, createPost, updatePost, deletePost };
+async function uploadImage(req, res) {
+  return res.json({ imageUrl: req.imageUrl });
+}
+
+module.exports = { listPosts, getPost, createPost, updatePost, deletePost, uploadImage };

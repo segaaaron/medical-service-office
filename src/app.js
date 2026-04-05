@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
 
@@ -40,6 +41,9 @@ const corsOptions = isProduction
 
 app.use(cors(corsOptions));
 app.options('/{*path}', cors(corsOptions)); // pre-flight for all routes
+
+// ── Archivos estáticos (imágenes subidas) ────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
