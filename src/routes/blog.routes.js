@@ -12,7 +12,6 @@ const { createBlogPostSchema, updateBlogPostSchema } = require('../schemas/index
 
 const router = Router();
 
-// Public — allow the website to load blog posts without authentication
 router.get('/', listPosts);
 router.get('/:id', getPost);
 

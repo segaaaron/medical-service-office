@@ -3,9 +3,7 @@ const { toSlug } = require('../utils/slug');
 
 async function listPosts(req, res, next) {
   try {
-    const { published } = req.query;
-    // Default to published posts only; pass published=false to see drafts (protected route)
-    const where = { published: published !== undefined ? published === 'true' : true };
+    const where = {};
 
     const posts = await prisma.blogPost.findMany({
       where,
