@@ -18,7 +18,7 @@ router.get('/:id', getTreatment);
 
 // Protected — only authenticated admins
 router.post('/', authenticate, validate(createTreatmentSchema), createTreatment);
-router.put('/:id', authenticate, validate(createTreatmentSchema), updateTreatment);
+router.put('/:id', authenticate, updateTreatment);
 router.delete('/:id', authenticate, deleteTreatment);
 
 module.exports = router;

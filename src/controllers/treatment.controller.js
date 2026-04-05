@@ -64,7 +64,14 @@ async function updateTreatment(req, res, next) {
   try {
     const { name, description, longDescription, price, category, imageUrl, active } = req.body;
     const data = {};
-    if (name !== undefined) { data.name = name; data.slug = toSlug(name); }
+
+    const current = await prisma.treatment.findUnique({ where: { id: req.params.id } });
+    if (!current) return res.status(404).json({ error: 'Treatment not found' });
+
+    if (name !== undefined) {
+      data.name = name;
+      if (name !== current.name) data.slug = toSlug(name);
+    }
     if (description !== undefined) data.description = description;
     if (longDescription !== undefined) data.longDescription = longDescription;
     if (price !== undefined) data.price = parseFloat(price);

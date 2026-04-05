@@ -2,7 +2,7 @@ const { verifyAccessToken } = require('../services/auth.service');
 
 function authenticate(req, res, next) {
   const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
     return res.status(401).json({ error: 'Missing or malformed Authorization header' });
   }
 
