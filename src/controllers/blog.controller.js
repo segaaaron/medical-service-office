@@ -41,21 +41,21 @@ async function getPost(req, res, next) {
 async function createPost(req, res, next) {
   try {
     const { title, excerpt, content, published } = req.body;
-    const imageUrl = req.imageUrl ?? req.body.imageUrl;
-    if (!title || !content) {
-      return res.status(400).json({ error: 'title and content are required' });
-    }
+    // req.imageUrl is set by compressAndSave if a file was uploaded;
+    // req.body.imageUrl is the URL injected by mergeImageUrl (same value) or a URL sent by the client.
+    // After validate, req.body.imageUrl is the validated value. Use it as fallback.
+    const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(title);
-    const isPublished = published === true || published === 'true';
+    const isPublished = published === true;
 
     const post = await prisma.blogPost.create({
       data: {
         title,
         slug,
-        excerpt,
+        excerpt: excerpt ?? null,
         content,
-        imageUrl,
+        imageUrl: imageUrl || null,
         published: isPublished,
         publishedAt: isPublished ? new Date() : null,
       },
@@ -72,7 +72,7 @@ async function createPost(req, res, next) {
 async function updatePost(req, res, next) {
   try {
     const { title, excerpt, content, published } = req.body;
-    const imageUrl = req.imageUrl ?? req.body.imageUrl;
+    const imageUrl = req.imageUrl ?? req.body.imageUrl ?? undefined;
     const data = {};
 
     // Always fetch current post to validate existence and support publishedAt logic
@@ -87,9 +87,9 @@ async function updatePost(req, res, next) {
       }
     }
 
-    if (excerpt !== undefined) data.excerpt = excerpt;
+    if (excerpt !== undefined) data.excerpt = excerpt ?? null;
     if (content !== undefined) data.content = content;
-    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
 
     if (published !== undefined) {
       data.published = published;

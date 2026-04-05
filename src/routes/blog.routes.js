@@ -19,7 +19,10 @@ router.get('/:id', getPost);
 
 // Merge uploaded image URL into req.body so the validation schema can see it
 function mergeImageUrl(req, res, next) {
-  if (req.imageUrl) req.body.imageUrl = req.imageUrl;
+  if (req.imageUrl) {
+    if (!req.body || typeof req.body !== 'object') req.body = {};
+    req.body.imageUrl = req.imageUrl;
+  }
   next();
 }
 

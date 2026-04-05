@@ -6,7 +6,9 @@
  */
 function validate(schema) {
   return function validationMiddleware(req, res, next) {
-    const result = schema.validate(req.body);
+    // Guard: ensure req.body is an object (e.g. content-type was not json or multipart)
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const result = schema.validate(body);
 
     if (!result.success) {
       return res.status(400).json({
