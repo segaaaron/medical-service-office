@@ -57,4 +57,8 @@ async function deleteSiteContent(req, res, next) {
   }
 }
 
-module.exports = { getSiteContent, listSiteContent, upsertSiteContent, deleteSiteContent };
+async function uploadImage(req, res) {
+  return res.json({ imageUrl: req.imageUrl });
+}
+
+module.exports = { getSiteContent, listSiteContent, upsertSiteContent, deleteSiteContent, uploadImage };

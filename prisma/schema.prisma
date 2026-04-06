@@ -31,21 +31,21 @@ model RefreshToken {
 }
 
 model Treatment {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  description     String?
   longDescription String?
-  price       Float
-  category    String
-  imageUrl    String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  price           Float?
+  category        String?
+  tag             String?
+  imageUrl        String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   appointments Appointment[]
 
-  @@index([category])
   @@index([active])
 }
 

@@ -50,6 +50,8 @@ const loginSchema = {
 // ---------------------------------------------------------------------------
 // createTreatmentSchema
 // ---------------------------------------------------------------------------
+const VALID_TAGS = ['POPULAR', 'INNOVADOR', 'RECOMENDADO', 'DEFINITIVO', 'ESENCIAL', 'ESPECIALIZADO'];
+
 const createTreatmentSchema = {
   validate(data) {
     const errors = [];
@@ -61,16 +63,12 @@ const createTreatmentSchema = {
       out.name = data.name.trim();
     }
 
-    if (!isNumber(data.price) || data.price <= 0) {
-      errors.push(err('price', 'Price must be a positive number'));
-    } else {
-      out.price = data.price;
-    }
-
-    if (!isString(data.category) || data.category.trim().length < 1) {
-      errors.push(err('category', 'Category is required'));
-    } else {
-      out.category = data.category.trim();
+    if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
+      if (!isString(data.tag) || !VALID_TAGS.includes(data.tag.trim().toUpperCase())) {
+        errors.push(err('tag', `Tag must be one of: ${VALID_TAGS.join(', ')}`));
+      } else {
+        out.tag = data.tag.trim().toUpperCase();
+      }
     }
 
     if (data.description !== undefined && data.description !== null) {
@@ -81,30 +79,84 @@ const createTreatmentSchema = {
       }
     }
 
-    if (data.longDescription !== undefined && data.longDescription !== null) {
-      if (!isString(data.longDescription)) {
-        errors.push(err('longDescription', 'Long description must be a string'));
-      } else {
-        out.longDescription = data.longDescription;
-      }
-    }
-
     if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !URL_RE.test(data.imageUrl)) {
-        errors.push(err('imageUrl', 'Image URL must be a valid http/https URL or empty string'));
+      if (!isString(data.imageUrl)) {
+        errors.push(err('imageUrl', 'Image URL must be a string'));
       } else {
         out.imageUrl = data.imageUrl;
       }
     } else {
-      out.imageUrl = data.imageUrl ?? '';
+      out.imageUrl = data.imageUrl ?? null;
     }
 
     if (data.active !== undefined) {
-      if (!isBoolean(data.active)) {
-        errors.push(err('active', 'Active must be a boolean'));
+      if (data.active === true || data.active === 'true') {
+        out.active = true;
+      } else if (data.active === false || data.active === 'false') {
+        out.active = false;
       } else {
-        out.active = data.active;
+        errors.push(err('active', 'Active must be a boolean'));
       }
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// updateTreatmentSchema
+// ---------------------------------------------------------------------------
+const updateTreatmentSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (data.name !== undefined && data.name !== null) {
+      if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 200) {
+        errors.push(err('name', 'Name must be between 1 and 200 characters'));
+      } else {
+        out.name = data.name.trim();
+      }
+    }
+
+    if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
+      if (!isString(data.tag) || !VALID_TAGS.includes(data.tag.trim().toUpperCase())) {
+        errors.push(err('tag', `Tag must be one of: ${VALID_TAGS.join(', ')}`));
+      } else {
+        out.tag = data.tag.trim().toUpperCase();
+      }
+    } else if (data.tag === '' || data.tag === null) {
+      out.tag = null;
+    }
+
+    if (data.description !== undefined && data.description !== null) {
+      if (!isString(data.description)) {
+        errors.push(err('description', 'Description must be a string'));
+      } else {
+        out.description = data.description;
+      }
+    }
+
+    if (data.imageUrl !== undefined && data.imageUrl !== null) {
+      if (!isString(data.imageUrl)) {
+        errors.push(err('imageUrl', 'Image URL must be a string'));
+      } else {
+        out.imageUrl = data.imageUrl;
+      }
+    }
+
+    if (data.active !== undefined) {
+      if (data.active === true || data.active === 'true') {
+        out.active = true;
+      } else if (data.active === false || data.active === 'false') {
+        out.active = false;
+      } else {
+        errors.push(err('active', 'Active must be a boolean'));
+      }
+    }
+
+    if (Object.keys(out).length === 0 && errors.length === 0) {
+      errors.push(err('body', 'At least one field must be provided for update'));
     }
 
     return errors.length ? { success: false, errors } : { success: true, data: out };
@@ -224,7 +276,7 @@ const createAppointmentSchema = {
 // ---------------------------------------------------------------------------
 // upsertSiteContentSchema
 // ---------------------------------------------------------------------------
-const VALID_SITE_CONTENT_KEYS = ['main', 'branding', 'hero', 'value', 'course', 'presets', 'about', 'faqs', 'footer', 'promoBanner', 'promoPopup', 'freePDFs', 'freeResourcesForm', 'sectionHeaders'];
+const VALID_SITE_CONTENT_KEYS = ['main', 'branding', 'hero', 'value', 'course', 'presets', 'about', 'faqs', 'footer', 'promoBanner', 'promoPopup', 'freePDFs', 'freeResourcesForm', 'sectionHeaders', 'treatmentsPage'];
 
 const upsertSiteContentSchema = {
   validate(data) {
@@ -388,6 +440,7 @@ const upsertContactSchema = {
 module.exports = {
   loginSchema,
   createTreatmentSchema,
+  updateTreatmentSchema,
   createBlogPostSchema,
   updateBlogPostSchema,
   createAppointmentSchema,

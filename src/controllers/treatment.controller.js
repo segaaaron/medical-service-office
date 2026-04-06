@@ -32,10 +32,8 @@ async function getTreatment(req, res, next) {
 
 async function createTreatment(req, res, next) {
   try {
-    const { name, description, longDescription, price, category, imageUrl, active } = req.body;
-    if (!name || price === undefined || !category) {
-      return res.status(400).json({ error: 'name, price, and category are required' });
-    }
+    const { name, description, longDescription, price, category, tag, active } = req.body;
+    const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(name);
 
@@ -43,11 +41,12 @@ async function createTreatment(req, res, next) {
       data: {
         name,
         slug,
-        description,
-        longDescription,
-        price: parseFloat(price),
-        category,
-        imageUrl,
+        description: description ?? null,
+        longDescription: longDescription ?? null,
+        price: price !== undefined ? parseFloat(price) : null,
+        category: category ?? null,
+        tag: tag ?? null,
+        imageUrl: imageUrl || null,
         active: active ?? true,
       },
     });
@@ -62,7 +61,8 @@ async function createTreatment(req, res, next) {
 
 async function updateTreatment(req, res, next) {
   try {
-    const { name, description, longDescription, price, category, imageUrl, active } = req.body;
+    const { name, description, longDescription, price, category, tag, active } = req.body;
+    const imageUrl = req.imageUrl ?? req.body.imageUrl ?? undefined;
     const data = {};
 
     const current = await prisma.treatment.findUnique({ where: { id: req.params.id } });
@@ -76,7 +76,8 @@ async function updateTreatment(req, res, next) {
     if (longDescription !== undefined) data.longDescription = longDescription;
     if (price !== undefined) data.price = parseFloat(price);
     if (category !== undefined) data.category = category;
-    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    if (tag !== undefined) data.tag = tag ?? null;
+    if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
     if (active !== undefined) data.active = active;
 
     const treatment = await prisma.treatment.update({
