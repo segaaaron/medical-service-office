@@ -2,7 +2,35 @@
   "permissions": {
     "allow": [
       "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office -not -path */node_modules/* -not -path */.git/* -not -path */.DS_Store -type f)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(git status:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:yasminmedrano.com)",
+      "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend -type d -name *web* -o -type d -name *app* -o -type d -name *frontend*)",
+      "Bash(grep -v \"^d.*\\\\.$\")",
+      "Bash(npx prisma:*)",
+      "Bash(grep -r \"API_URL\\\\|BACKEND_URL\\\\|api/blog\\\\|localhost:\" /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office --include=*.env* --include=*.json -l)",
+      "Bash(git log:*)",
+      "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/src -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
+      "Skill(update-config)",
+      "Bash(jq:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | grep -q 'git commit' && cd /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office && node scripts/clean-orphan-files.js --delete 2>/dev/null || true",
+            "statusMessage": "Limpiando archivos huérfanos..."
+          }
+        ]
+      }
     ]
   }
 }

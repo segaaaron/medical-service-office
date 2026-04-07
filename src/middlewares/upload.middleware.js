@@ -41,8 +41,7 @@ async function compressAndSave(req, res, next) {
       .withMetadata()                   // preserva orientación EXIF
       .toFile(dest);
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    req.imageUrl = `${baseUrl}/uploads/${filename}`;
+    req.imageUrl = `/uploads/${filename}`;
     next();
   } catch (err) {
     next(err);
@@ -56,8 +55,11 @@ async function compressAndSave(req, res, next) {
 function deleteUploadedFile(imageUrl) {
   if (!imageUrl) return;
   try {
-    const url = new URL(imageUrl);
-    const pathname = url.pathname; // e.g. /uploads/filename.webp
+    // Soporta tanto path relativo (/uploads/file.webp) como URL completa (http://host/uploads/file.webp)
+    let pathname = imageUrl;
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      pathname = new URL(imageUrl).pathname;
+    }
     if (!pathname.startsWith('/uploads/')) return;
     const filename = path.basename(pathname);
     const filePath = path.join(UPLOAD_DIR, filename);
