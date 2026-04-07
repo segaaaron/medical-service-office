@@ -35,7 +35,6 @@ async function main() {
       description:     'Eliminación de sarro y placa bacteriana para mantener encías y dientes sanos.',
       longDescription: 'Procedimiento preventivo que incluye ultrasonido, pulido y aplicación de flúor. Recomendado cada 6 meses.',
       price:           350,
-      category:        'Prevención',
       active:          true,
     },
     {
@@ -44,7 +43,6 @@ async function main() {
       description:     'Aclaramiento del tono de los dientes con gel profesional de peróxido de hidrógeno.',
       longDescription: 'Sesión en consultorio de 60-90 min con lámpara de activación. Resultados visibles desde la primera cita.',
       price:           1200,
-      category:        'Estética',
       active:          true,
     },
     {
@@ -53,7 +51,6 @@ async function main() {
       description:     'Corrección de la alineación dental con brackets metálicos de alta durabilidad.',
       longDescription: 'Tratamiento de 18-24 meses. Incluye consultas de seguimiento mensuales y retención al finalizar.',
       price:           18000,
-      category:        'Ortodoncia',
       active:          true,
     },
     {
@@ -62,7 +59,6 @@ async function main() {
       description:     'Extracción de piezas dentales con anestesia local en condiciones de mínima complejidad.',
       longDescription: 'Incluye radiografía diagnóstica, anestesia local y medicación post-operatoria básica.',
       price:           600,
-      category:        'Cirugía',
       active:          true,
     },
   ];
