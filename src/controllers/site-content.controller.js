@@ -1,4 +1,5 @@
 const prisma = require('../services/prisma.service');
+const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 const DEFAULT_KEY = 'main';
 
@@ -32,7 +33,18 @@ async function listSiteContent(req, res, next) {
 
 async function upsertSiteContent(req, res, next) {
   try {
-    const { key, value } = req.body;
+    const { key } = req.body;
+    let value = req.body.value;
+
+    // Si se subió una imagen, borrar la anterior y guardar la nueva URL en doctorImage
+    if (req.imageUrl && value && typeof value === 'object') {
+      const existing = await prisma.siteContent.findUnique({ where: { key } });
+      const oldImage = existing?.value?.doctorImage;
+      if (oldImage && oldImage !== req.imageUrl) {
+        deleteUploadedFile(oldImage);
+      }
+      value = { ...value, doctorImage: req.imageUrl };
+    }
 
     const record = await prisma.siteContent.upsert({
       where: { key },
@@ -40,9 +52,7 @@ async function upsertSiteContent(req, res, next) {
       create: { key, value },
     });
 
-    // Si se subió una imagen junto con el upsert, la devolvemos en la respuesta
-    const response = req.imageUrl ? { ...record, imageUrl: req.imageUrl } : record;
-    return res.json(response);
+    return res.json(record);
   } catch (err) {
     next(err);
   }

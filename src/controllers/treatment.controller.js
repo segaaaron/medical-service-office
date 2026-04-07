@@ -1,5 +1,6 @@
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
+const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listTreatments(req, res, next) {
   try {
@@ -77,7 +78,12 @@ async function updateTreatment(req, res, next) {
     if (price !== undefined) data.price = parseFloat(price);
     if (category !== undefined) data.category = category;
     if (tag !== undefined) data.tag = tag ?? null;
-    if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
+    if (imageUrl !== undefined) {
+      if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
+        deleteUploadedFile(current.imageUrl);
+      }
+      data.imageUrl = imageUrl || null;
+    }
     if (active !== undefined) data.active = active;
 
     const treatment = await prisma.treatment.update({
@@ -94,6 +100,8 @@ async function updateTreatment(req, res, next) {
 
 async function deleteTreatment(req, res, next) {
   try {
+    const treatment = await prisma.treatment.findUnique({ where: { id: req.params.id } });
+    if (treatment) deleteUploadedFile(treatment.imageUrl);
     await prisma.treatment.delete({ where: { id: req.params.id } });
     return res.status(204).send();
   } catch (err) {

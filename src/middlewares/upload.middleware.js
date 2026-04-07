@@ -49,4 +49,24 @@ async function compressAndSave(req, res, next) {
   }
 }
 
-module.exports = { upload, compressAndSave };
+/**
+ * Elimina un archivo de /uploads dado su URL pública.
+ * No lanza error si el archivo no existe o la URL no apunta a /uploads.
+ */
+function deleteUploadedFile(imageUrl) {
+  if (!imageUrl) return;
+  try {
+    const url = new URL(imageUrl);
+    const pathname = url.pathname; // e.g. /uploads/filename.webp
+    if (!pathname.startsWith('/uploads/')) return;
+    const filename = path.basename(pathname);
+    const filePath = path.join(UPLOAD_DIR, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch {
+    // URL inválida o error de fs — ignorar silenciosamente
+  }
+}
+
+module.exports = { upload, compressAndSave, deleteUploadedFile };

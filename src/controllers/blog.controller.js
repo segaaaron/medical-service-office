@@ -1,5 +1,6 @@
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
+const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listPosts(req, res, next) {
   try {
@@ -89,7 +90,13 @@ async function updatePost(req, res, next) {
 
     if (excerpt !== undefined) data.excerpt = excerpt ?? null;
     if (content !== undefined) data.content = content;
-    if (imageUrl !== undefined) data.imageUrl = imageUrl || null;
+    if (imageUrl !== undefined) {
+      // Borrar imagen anterior si se está reemplazando
+      if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
+        deleteUploadedFile(current.imageUrl);
+      }
+      data.imageUrl = imageUrl || null;
+    }
 
     if (published !== undefined) {
       data.published = published;
@@ -117,6 +124,8 @@ async function updatePost(req, res, next) {
 
 async function deletePost(req, res, next) {
   try {
+    const post = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+    if (post) deleteUploadedFile(post.imageUrl);
     await prisma.blogPost.delete({ where: { id: req.params.id } });
     return res.status(204).send();
   } catch (err) {
