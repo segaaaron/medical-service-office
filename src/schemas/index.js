@@ -94,16 +94,7 @@ const createTreatmentSchema = {
       out.imageUrl = data.imageUrl ?? null;
     }
 
-    if (data.active !== undefined) {
-      if (data.active === true || data.active === 'true') {
-        out.active = true;
-      } else if (data.active === false || data.active === 'false') {
-        out.active = false;
-      } else {
-        errors.push(err('active', 'Active must be a boolean'));
-      }
-    }
-
+    out.active = data.active ?? false;
     return errors.length ? { success: false, errors } : { success: true, data: out };
   },
 };
@@ -159,15 +150,7 @@ const updateTreatmentSchema = {
       }
     }
 
-    if (data.active !== undefined) {
-      if (data.active === true || data.active === 'true') {
-        out.active = true;
-      } else if (data.active === false || data.active === 'false') {
-        out.active = false;
-      } else {
-        errors.push(err('active', 'Active must be a boolean'));
-      }
-    }
+    out.active = data.active ?? false;
 
     if (Object.keys(out).length === 0 && errors.length === 0) {
       errors.push(err('body', 'At least one field must be provided for update'));

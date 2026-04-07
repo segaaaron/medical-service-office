@@ -45,7 +45,7 @@ async function createTreatment(req, res, next) {
         price: price ?? null,
         tag: tag ?? null,
         imageUrl: imageUrl || null,
-        active: active ?? true,
+        active: active ?? false,
       },
     });
     return res.status(201).json(treatment);
