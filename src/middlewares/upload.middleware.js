@@ -41,7 +41,8 @@ async function compressAndSave(req, res, next) {
       .withMetadata()                   // preserva orientación EXIF
       .toFile(dest);
 
-    req.imageUrl = `/uploads/${filename}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    req.imageUrl = `${baseUrl}/uploads/${filename}`;
     next();
   } catch (err) {
     next(err);
