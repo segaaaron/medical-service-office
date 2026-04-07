@@ -75,7 +75,7 @@ const createTreatmentSchema = {
       out.description = data.description;
     }
 
-    if (data.price !== undefined && data.price !== null) {
+    if (data.price !== undefined && data.price !== null && data.price !== '') {
       const parsed = parseFloat(data.price);
       if (Number.isNaN(parsed) || parsed < 0) {
         errors.push(err('price', 'Price must be a non-negative number'));
@@ -142,7 +142,7 @@ const updateTreatmentSchema = {
       }
     }
 
-    if (data.price !== undefined && data.price !== null) {
+    if (data.price !== undefined && data.price !== null && data.price !== '') {
       const parsed = parseFloat(data.price);
       if (Number.isNaN(parsed) || parsed < 0) {
         errors.push(err('price', 'Price must be a non-negative number'));
