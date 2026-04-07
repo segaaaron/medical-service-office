@@ -4,10 +4,9 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listTreatments(req, res, next) {
   try {
-    const { category, active } = req.query;
+    const { active } = req.query;
     // Default to active treatments only; pass active=false to see inactive
     const where = { active: active !== undefined ? active === 'true' : true };
-    if (category) where.category = category;
 
     const treatments = await prisma.treatment.findMany({
       where,
@@ -33,7 +32,7 @@ async function getTreatment(req, res, next) {
 
 async function createTreatment(req, res, next) {
   try {
-    const { name, description, longDescription, price, category, tag, active } = req.body;
+    const { name, description, price, tag, active } = req.body;
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(name);
@@ -43,9 +42,7 @@ async function createTreatment(req, res, next) {
         name,
         slug,
         description: description ?? null,
-        longDescription: longDescription ?? null,
-        price: price !== undefined ? parseFloat(price) : null,
-        category: category ?? null,
+        price: price ?? null,
         tag: tag ?? null,
         imageUrl: imageUrl || null,
         active: active ?? true,
@@ -62,7 +59,7 @@ async function createTreatment(req, res, next) {
 
 async function updateTreatment(req, res, next) {
   try {
-    const { name, description, longDescription, price, category, tag, active } = req.body;
+    const { name, description, price, tag, active } = req.body;
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? undefined;
     const data = {};
 
@@ -74,9 +71,7 @@ async function updateTreatment(req, res, next) {
       if (name !== current.name) data.slug = toSlug(name);
     }
     if (description !== undefined) data.description = description;
-    if (longDescription !== undefined) data.longDescription = longDescription;
-    if (price !== undefined) data.price = parseFloat(price);
-    if (category !== undefined) data.category = category;
+    if (price !== undefined) data.price = price;
     if (tag !== undefined) data.tag = tag ?? null;
     if (imageUrl !== undefined) {
       if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {

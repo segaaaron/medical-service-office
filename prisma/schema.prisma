@@ -37,7 +37,6 @@ model Treatment {
   description     String?
   longDescription String?
   price           Float?
-  category        String?
   tag             String?
   imageUrl        String?
   active          Boolean  @default(true)

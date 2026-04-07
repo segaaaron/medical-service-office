@@ -50,8 +50,6 @@ const loginSchema = {
 // ---------------------------------------------------------------------------
 // createTreatmentSchema
 // ---------------------------------------------------------------------------
-const VALID_TAGS = ['POPULAR', 'INNOVADOR', 'RECOMENDADO', 'DEFINITIVO', 'ESENCIAL', 'ESPECIALIZADO'];
-
 const createTreatmentSchema = {
   validate(data) {
     const errors = [];
@@ -64,10 +62,10 @@ const createTreatmentSchema = {
     }
 
     if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
-      if (!isString(data.tag) || !VALID_TAGS.includes(data.tag.trim().toUpperCase())) {
-        errors.push(err('tag', `Tag must be one of: ${VALID_TAGS.join(', ')}`));
+      if (!isString(data.tag)) {
+        errors.push(err('tag', 'Tag must be a string'));
       } else {
-        out.tag = data.tag.trim().toUpperCase();
+        out.tag = data.tag.trim();
       }
     }
 
@@ -76,6 +74,15 @@ const createTreatmentSchema = {
         errors.push(err('description', 'Description must be a string'));
       } else {
         out.description = data.description;
+      }
+    }
+
+    if (data.price !== undefined && data.price !== null) {
+      const parsed = parseFloat(data.price);
+      if (Number.isNaN(parsed) || parsed < 0) {
+        errors.push(err('price', 'Price must be a non-negative number'));
+      } else {
+        out.price = parsed;
       }
     }
 
@@ -120,10 +127,10 @@ const updateTreatmentSchema = {
     }
 
     if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
-      if (!isString(data.tag) || !VALID_TAGS.includes(data.tag.trim().toUpperCase())) {
-        errors.push(err('tag', `Tag must be one of: ${VALID_TAGS.join(', ')}`));
+      if (!isString(data.tag)) {
+        errors.push(err('tag', 'Tag must be a string'));
       } else {
-        out.tag = data.tag.trim().toUpperCase();
+        out.tag = data.tag.trim();
       }
     } else if (data.tag === '' || data.tag === null) {
       out.tag = null;
@@ -134,6 +141,15 @@ const updateTreatmentSchema = {
         errors.push(err('description', 'Description must be a string'));
       } else {
         out.description = data.description;
+      }
+    }
+
+    if (data.price !== undefined && data.price !== null) {
+      const parsed = parseFloat(data.price);
+      if (Number.isNaN(parsed) || parsed < 0) {
+        errors.push(err('price', 'Price must be a non-negative number'));
+      } else {
+        out.price = parsed;
       }
     }
 

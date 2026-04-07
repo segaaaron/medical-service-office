@@ -15,7 +15,7 @@ async function listAppointments(req, res, next) {
 
     const appointments = await prisma.appointment.findMany({
       where,
-      include: { treatment: { select: { id: true, name: true, category: true } } },
+      include: { treatment: { select: { id: true, name: true, tag: true } } },
       orderBy: { createdAt: 'desc' },
     });
     return res.json(appointments);
@@ -28,7 +28,7 @@ async function getAppointment(req, res, next) {
   try {
     const appointment = await prisma.appointment.findUnique({
       where: { id: req.params.id },
-      include: { treatment: { select: { id: true, name: true, category: true } } },
+      include: { treatment: { select: { id: true, name: true, tag: true } } },
     });
     if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
     return res.json(appointment);
@@ -55,7 +55,7 @@ async function createAppointment(req, res, next) {
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         status: 'PENDING',
       },
-      include: { treatment: { select: { id: true, name: true, category: true } } },
+      include: { treatment: { select: { id: true, name: true, tag: true } } },
     });
     return res.status(201).json(appointment);
   } catch (err) {
@@ -84,7 +84,7 @@ async function updateAppointment(req, res, next) {
     const appointment = await prisma.appointment.update({
       where: { id: req.params.id },
       data,
-      include: { treatment: { select: { id: true, name: true, category: true } } },
+      include: { treatment: { select: { id: true, name: true, tag: true } } },
     });
     return res.json(appointment);
   } catch (err) {
