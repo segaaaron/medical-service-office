@@ -40,7 +40,9 @@ async function upsertSiteContent(req, res, next) {
       create: { key, value },
     });
 
-    return res.json(record);
+    // Si se subió una imagen junto con el upsert, la devolvemos en la respuesta
+    const response = req.imageUrl ? { ...record, imageUrl: req.imageUrl } : record;
+    return res.json(response);
   } catch (err) {
     next(err);
   }
