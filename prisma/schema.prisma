@@ -116,3 +116,32 @@ model SiteContent {
 
   @@index([key])
 }
+
+model AboutUs {
+  id                     String   @id @default(uuid())
+  sectionLabel           String?
+  doctorName             String?
+  descriptionDoc         String?
+  imageUrl               String?
+  experienceBadgeValue   String?
+  experienceBadgeLabel   String?
+  stat1Value             String?
+  stat1Label             String?
+  stat2Value             String?
+  stat2Label             String?
+  stat3Value             String?
+  stat3Label             String?
+  whyChooseUsLabel       String?
+  whyChooseUsTitle       String?
+  whyChooseUsDescription String?
+  feature1Title          String?
+  feature1Description    String?
+  feature2Title          String?
+  feature2Description    String?
+  feature3Title          String?
+  feature3Description    String?
+  feature4Title          String?
+  feature4Description    String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}

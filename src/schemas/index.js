@@ -441,6 +441,43 @@ const upsertContactSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// upsertAboutUsSchema
+// ---------------------------------------------------------------------------
+const ABOUT_US_STRING_FIELDS = [
+  'sectionLabel', 'doctorName',
+  'descriptionDoc',
+  'imageUrl',
+  'experienceBadgeValue', 'experienceBadgeLabel',
+  'stat1Value', 'stat1Label',
+  'stat2Value', 'stat2Label',
+  'stat3Value', 'stat3Label',
+  'whyChooseUsLabel', 'whyChooseUsTitle', 'whyChooseUsDescription',
+  'feature1Title', 'feature1Description',
+  'feature2Title', 'feature2Description',
+  'feature3Title', 'feature3Description',
+  'feature4Title', 'feature4Description',
+];
+
+const upsertAboutUsSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    for (const field of ABOUT_US_STRING_FIELDS) {
+      if (data[field] !== undefined && data[field] !== null) {
+        if (!isString(data[field])) {
+          errors.push(err(field, `${field} must be a string`));
+        } else {
+          out[field] = data[field];
+        }
+      }
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
   createTreatmentSchema,
@@ -450,4 +487,5 @@ module.exports = {
   createAppointmentSchema,
   upsertSiteContentSchema,
   upsertContactSchema,
+  upsertAboutUsSchema,
 };
