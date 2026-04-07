@@ -4,12 +4,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listTreatments(req, res, next) {
   try {
-    const { active } = req.query;
-    // Default to active treatments only; pass active=false to see inactive
-    const where = { active: active !== undefined ? active === 'true' : true };
-
     const treatments = await prisma.treatment.findMany({
-      where,
       orderBy: { createdAt: 'desc' },
     });
     return res.json(treatments);
@@ -32,7 +27,7 @@ async function getTreatment(req, res, next) {
 
 async function createTreatment(req, res, next) {
   try {
-    const { name, description, price, tag, active } = req.body;
+    const { name, description, price, tag } = req.body;
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(name);
@@ -45,7 +40,7 @@ async function createTreatment(req, res, next) {
         price: price ?? null,
         tag: tag ?? null,
         imageUrl: imageUrl || null,
-        active: active ?? false,
+        active: true,
       },
     });
     return res.status(201).json(treatment);
