@@ -69,12 +69,10 @@ const createTreatmentSchema = {
       }
     }
 
-    if (data.description !== undefined && data.description !== null) {
-      if (!isString(data.description)) {
-        errors.push(err('description', 'Description must be a string'));
-      } else {
-        out.description = data.description;
-      }
+    if (!isString(data.description) || data.description.trim().length < 1) {
+      errors.push(err('description', 'Description is required'));
+    } else {
+      out.description = data.description;
     }
 
     if (data.price !== undefined && data.price !== null) {
