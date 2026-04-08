@@ -14,6 +14,7 @@ async function getPromoBanner(req, res, next) {
 async function upsertPromoBanner(req, res, next) {
   try {
     const data = { ...req.body };
+    if (data.active !== undefined) data.active = data.active === 'true' || data.active === true;
 
     if (req.imageUrl) {
       const existing = await prisma.promoBanner.findFirst();
