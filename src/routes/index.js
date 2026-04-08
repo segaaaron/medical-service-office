@@ -8,6 +8,7 @@ const siteContentRoutes = require('./site-content.routes');
 const contactRoutes = require('./contact.routes');
 const aboutRoutes = require('./about.routes');
 const footerRoutes = require('./footer.routes');
+const homeRoutes = require('./home.routes');
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/site-content', siteContentRoutes);
 router.use('/contact', contactRoutes);
 router.use('/about', aboutRoutes);
 router.use('/footer', footerRoutes);
+router.use('/home', homeRoutes);
 
 module.exports = router;

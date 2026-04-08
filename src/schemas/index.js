@@ -478,6 +478,15 @@ const upsertAboutUsSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// upsertHomeSchema
+// ---------------------------------------------------------------------------
+const upsertHomeSchema = {
+  validate(data) {
+    return { success: true, data };
+  },
+};
+
 module.exports = {
   loginSchema,
   createTreatmentSchema,
@@ -488,4 +497,5 @@ module.exports = {
   upsertSiteContentSchema,
   upsertContactSchema,
   upsertAboutUsSchema,
+  upsertHomeSchema,
 };

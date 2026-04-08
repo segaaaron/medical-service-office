@@ -135,6 +135,30 @@ model Footer {
   updatedAt            DateTime @updatedAt
 }
 
+model Home {
+  id               String   @id @default(uuid())
+  // Hero
+  specialties      String?
+  doctorName       String?
+  subtitle         String?
+  description      String?
+  highlightedText  String?
+  btn1Text         String?
+  btn2Text         String?
+  stat1Value       String?
+  stat1Label       String?
+  stat2Value       String?
+  stat2Label       String?
+  stat3Value       String?
+  stat3Label       String?
+  // FAQ
+  faqSectionLabel  String?
+  faqTitle         String?
+  faqs             Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
 model AboutUs {
   id                     String   @id @default(uuid())
   sectionLabel           String?
