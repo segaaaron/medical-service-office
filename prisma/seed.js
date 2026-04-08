@@ -384,6 +384,25 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
     create: { key: 'main', value: defaultSiteContent },
   });
   console.log(`SiteContent upserted: key=${siteContent.key}`);
+
+  // ── PromoBanner ──────────────────────────────────────────────────────────
+  const existingBanner = await prisma.promoBanner.findFirst();
+  if (!existingBanner) {
+    await prisma.promoBanner.create({
+      data: {
+        tag: 'Promo Especial',
+        title: 'Biorevitalización NCTF 135 HA',
+        highlightedText: '20% de descuento',
+        whatsappText: 'Agendar por WhatsApp',
+        whatsappUrl: 'https://wa.me/59178751894?text=Hola%20quiero%20info%20de%20la%20promo%20NCTF',
+        dismissText: 'Ahora no, gracias',
+        active: true,
+      },
+    });
+    console.log('PromoBanner created');
+  } else {
+    console.log('PromoBanner already exists');
+  }
 }
 
 main()
