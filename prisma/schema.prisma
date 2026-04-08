@@ -159,6 +159,23 @@ model Home {
   updatedAt        DateTime @updatedAt
 }
 
+model PromoBanner {
+  id             String   @id @default(uuid())
+  tag            String?
+  title          String?
+  highlightedText String?
+  description    String?
+  doctorName     String?
+  location       String?
+  whatsappText   String?
+  whatsappUrl    String?
+  dismissText    String?
+  imageUrl       String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 model AboutUs {
   id                     String   @id @default(uuid())
   sectionLabel           String?
