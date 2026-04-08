@@ -15,7 +15,6 @@ async function main() {
     update: { password: adminPass, name: adminName },
     create: { email: adminEmail, name: adminName, password: adminPass },
   });
-  console.log(`User upserted: ${admin.email}`);
 
   const secondEmail = process.env.SEED_SECOND_EMAIL || 'recepcion@consultorio.com';
   const secondPass  = await bcrypt.hash(process.env.SEED_SECOND_PASSWORD || 'Recepcion@2026', 10);
@@ -25,7 +24,6 @@ async function main() {
     update: { password: secondPass, name: 'Recepción' },
     create: { email: secondEmail, name: 'Recepción', password: secondPass },
   });
-  console.log(`User upserted: ${reception.email}`);
 
   // ── Treatments ───────────────────────────────────────────────────────────
   const treatments = [
@@ -69,7 +67,6 @@ async function main() {
       update: { price: t.price, active: t.active },
       create: t,
     });
-    console.log(`Treatment upserted: ${result.name}`);
   }
 
   // ── Blog Posts ───────────────────────────────────────────────────────────
@@ -151,7 +148,6 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
       update: { published: p.published, publishedAt: p.publishedAt },
       create: p,
     });
-    console.log(`BlogPost upserted: ${result.title}`);
   }
 
   // ── Appointments ─────────────────────────────────────────────────────────
@@ -206,10 +202,7 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
       where: { patientPhone: a.patientPhone, scheduledAt: a.scheduledAt },
     });
     if (!existing) {
-      const result = await prisma.appointment.create({ data: a });
-      console.log(`Appointment created: ${result.patientName} - ${result.treatmentName}`);
-    } else {
-      console.log(`Appointment already exists: ${a.patientName} - ${a.treatmentName}`);
+      await prisma.appointment.create({ data: a });
     }
   }
   // ── Site Content (Dashboard Home) ─────────────────────────────────────
@@ -383,7 +376,6 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
     update: { value: defaultSiteContent },
     create: { key: 'main', value: defaultSiteContent },
   });
-  console.log(`SiteContent upserted: key=${siteContent.key}`);
 
   // ── PromoBanner ──────────────────────────────────────────────────────────
   const existingBanner = await prisma.promoBanner.findFirst();
@@ -399,9 +391,6 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
         active: true,
       },
     });
-    console.log('PromoBanner created');
-  } else {
-    console.log('PromoBanner already exists');
   }
 }
 
