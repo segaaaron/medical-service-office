@@ -4,10 +4,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listPosts(req, res, next) {
   try {
-    const where = {};
-
     const posts = await prisma.blogPost.findMany({
-      where,
       orderBy: { publishedAt: 'desc' },
       select: {
         id: true,

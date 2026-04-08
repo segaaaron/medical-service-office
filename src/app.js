@@ -13,6 +13,7 @@ app.use(helmet());
 // ── CORS ────────────────────────────────────────────────────────────────────
 const isProduction = process.env.NODE_ENV === 'production';
 
+
 const corsOptions = isProduction
   ? {
       origin: (origin, callback) => {
@@ -47,23 +48,6 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
-
-// ── Request logger ───────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const ms = Date.now() - start;
-    const line = `${req.method} ${req.originalUrl} ${res.statusCode} ${ms}ms`;
-    // Use combined-like format in production, dev-like otherwise
-    if (isProduction) {
-      const ip = req.ip || req.socket.remoteAddress || '-';
-      console.log(`${ip} - ${line}`);
-    } else {
-      console.log(line);
-    }
-  });
-  next();
-});
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {

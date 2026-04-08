@@ -71,4 +71,12 @@ function deleteUploadedFile(imageUrl) {
   }
 }
 
-module.exports = { upload, compressAndSave, deleteUploadedFile };
+function mergeImageUrl(req, res, next) {
+  if (req.imageUrl) {
+    if (!req.body || typeof req.body !== 'object') req.body = {};
+    req.body.imageUrl = req.imageUrl;
+  }
+  next();
+}
+
+module.exports = { upload, compressAndSave, deleteUploadedFile, mergeImageUrl };

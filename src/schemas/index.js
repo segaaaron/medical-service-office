@@ -280,8 +280,6 @@ const createAppointmentSchema = {
 // ---------------------------------------------------------------------------
 // upsertSiteContentSchema
 // ---------------------------------------------------------------------------
-const VALID_SITE_CONTENT_KEYS = ['main', 'branding', 'hero', 'value', 'course', 'presets', 'about', 'faqs', 'footer', 'promoBanner', 'promoPopup', 'freePDFs', 'freeResourcesForm', 'sectionHeaders', 'treatmentsPage'];
-
 const upsertSiteContentSchema = {
   validate(data) {
     const errors = [];
