@@ -132,12 +132,16 @@ const updateTreatmentSchema = {
       }
     }
 
-    if (data.price !== undefined && data.price !== null && data.price !== '') {
-      const parsed = parseFloat(data.price);
-      if (Number.isNaN(parsed) || parsed < 0) {
-        errors.push(err('price', 'Price must be a non-negative number'));
+    if (data.price !== undefined) {
+      if (data.price === null || data.price === '') {
+        out.price = null;
       } else {
-        out.price = parsed;
+        const parsed = parseFloat(data.price);
+        if (Number.isNaN(parsed) || parsed < 0) {
+          errors.push(err('price', 'Price must be a non-negative number'));
+        } else {
+          out.price = parsed;
+        }
       }
     }
 
