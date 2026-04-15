@@ -65,9 +65,9 @@ async function updateTreatment(req, res, next) {
       data.name = name;
       if (name !== current.name) data.slug = toSlug(name);
     }
-    if (description !== undefined) data.description = description;
-    if (price !== undefined) data.price = price;
-    if (tag !== undefined) data.tag = tag ?? null;
+    if (description !== undefined) data.description = description === '' ? null : description;
+    if (price !== undefined) data.price = price === '' ? null : price;
+    if (tag !== undefined) data.tag = (tag === '' || tag == null) ? null : tag;
     if (imageUrl !== undefined) {
       if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
         deleteUploadedFile(current.imageUrl);
