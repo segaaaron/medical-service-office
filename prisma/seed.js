@@ -154,13 +154,17 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
   const cleaningTreatment = await prisma.treatment.findUnique({ where: { slug: 'limpieza-dental' } });
   const whiteningTreatment = await prisma.treatment.findUnique({ where: { slug: 'blanqueamiento-dental' } });
 
+  if (!cleaningTreatment || !whiteningTreatment) {
+    console.log('Skipping appointments seed: required treatments not found');
+    return;
+  }
+
   const appointments = [
     {
       patientName:   'María González Ruiz',
       patientPhone:  '5512345678',
       patientEmail:  'maria.gonzalez@email.com',
-      treatmentId:   cleaningTreatment?.id ?? null,
-      treatmentName: 'Limpieza Dental',
+      treatmentId:   cleaningTreatment.id,
       notes:         'Primera visita, refiere sensibilidad en molares superiores.',
       status:        'CONFIRMED',
       scheduledAt:   new Date('2026-04-05T10:00:00Z'),
@@ -169,8 +173,7 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
       patientName:   'Carlos Ramírez López',
       patientPhone:  '5598765432',
       patientEmail:  'carlos.ramirez@email.com',
-      treatmentId:   whiteningTreatment?.id ?? null,
-      treatmentName: 'Blanqueamiento Dental',
+      treatmentId:   whiteningTreatment.id,
       notes:         'Paciente interesado en aclarar 6-8 tonos antes de boda en junio.',
       status:        'PENDING',
       scheduledAt:   new Date('2026-04-08T12:00:00Z'),
@@ -179,8 +182,7 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
       patientName:   'Sofía Hernández Mora',
       patientPhone:  '5567891234',
       patientEmail:  null,
-      treatmentId:   null,
-      treatmentName: 'Consulta General',
+      treatmentId:   cleaningTreatment.id,
       notes:         'Dolor en tercer molar inferior derecho.',
       status:        'PENDING',
       scheduledAt:   new Date('2026-04-10T09:00:00Z'),
@@ -189,8 +191,7 @@ Agenda tu consulta de valoración sin costo para conocer tu caso.`,
       patientName:   'Roberto Jiménez Torres',
       patientPhone:  '5543218765',
       patientEmail:  'roberto.jimenez@email.com',
-      treatmentId:   cleaningTreatment?.id ?? null,
-      treatmentName: 'Limpieza Dental',
+      treatmentId:   cleaningTreatment.id,
       notes:         null,
       status:        'COMPLETED',
       scheduledAt:   new Date('2026-03-20T11:00:00Z'),

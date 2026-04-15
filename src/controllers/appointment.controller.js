@@ -39,9 +39,9 @@ async function getAppointment(req, res, next) {
 
 async function createAppointment(req, res, next) {
   try {
-    const { patientName, patientPhone, patientEmail, treatmentId, treatmentName, notes, scheduledAt } = req.body;
-    if (!patientName || !patientPhone || !treatmentName) {
-      return res.status(400).json({ error: 'patientName, patientPhone, and treatmentName are required' });
+    const { patientName, patientPhone, patientEmail, treatmentId, notes, scheduledAt } = req.body;
+    if (!patientName || !patientPhone || !treatmentId) {
+      return res.status(400).json({ error: 'patientName, patientPhone, and treatmentId are required' });
     }
 
     const appointment = await prisma.appointment.create({
@@ -49,8 +49,7 @@ async function createAppointment(req, res, next) {
         patientName,
         patientPhone,
         patientEmail,
-        treatmentId: treatmentId || null,
-        treatmentName,
+        treatmentId,
         notes,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         status: 'PENDING',
@@ -65,13 +64,12 @@ async function createAppointment(req, res, next) {
 
 async function updateAppointment(req, res, next) {
   try {
-    const { patientName, patientPhone, patientEmail, treatmentId, treatmentName, notes, status, scheduledAt } = req.body;
+    const { patientName, patientPhone, patientEmail, treatmentId, notes, status, scheduledAt } = req.body;
     const data = {};
     if (patientName !== undefined) data.patientName = patientName;
     if (patientPhone !== undefined) data.patientPhone = patientPhone;
     if (patientEmail !== undefined) data.patientEmail = patientEmail;
-    if (treatmentId !== undefined) data.treatmentId = treatmentId || null;
-    if (treatmentName !== undefined) data.treatmentName = treatmentName;
+    if (treatmentId !== undefined) data.treatmentId = treatmentId;
     if (notes !== undefined) data.notes = notes;
     if (scheduledAt !== undefined) data.scheduledAt = scheduledAt ? new Date(scheduledAt) : null;
     if (status !== undefined) {

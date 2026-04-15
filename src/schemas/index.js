@@ -253,10 +253,10 @@ const createAppointmentSchema = {
       out.patientEmail = data.patientEmail ?? '';
     }
 
-    if (!isString(data.treatmentName) || data.treatmentName.trim().length < 1) {
-      errors.push(err('treatmentName', 'Treatment name is required'));
+    if (!isString(data.treatmentId) || data.treatmentId.trim().length < 1) {
+      errors.push(err('treatmentId', 'treatmentId is required'));
     } else {
-      out.treatmentName = data.treatmentName.trim();
+      out.treatmentId = data.treatmentId.trim();
     }
 
     if (data.notes !== undefined && data.notes !== null) {

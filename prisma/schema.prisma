@@ -69,15 +69,14 @@ model Appointment {
   patientName     String
   patientPhone    String
   patientEmail    String?
-  treatmentId     String?
-  treatmentName   String
+  treatmentId     String
   notes           String?
   status          AppointmentStatus @default(PENDING)
   scheduledAt     DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  treatment Treatment? @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
+  treatment Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([scheduledAt])
