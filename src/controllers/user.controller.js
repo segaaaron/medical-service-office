@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../services/prisma.service');
+const logger = require('../config/logger');
 
 const SALT_ROUNDS = 10;
+const STRONG_PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
 
 function safeUser(user) {
   const { password, ...rest } = user;
@@ -48,13 +50,14 @@ async function createUser(req, res, next) {
     if (!EMAIL_RE.test(email)) {
       return res.status(400).json({ error: 'email must be a valid email address' });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'password must be at least 8 characters' });
+    if (!STRONG_PASSWORD_RE.test(password)) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character' });
     }
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await prisma.user.create({
       data: { email, name, password: hashed },
     });
+    logger.info({ event: 'user_created', userId: user.id, ip: req.ip, path: req.originalUrl }, 'User created');
     return res.status(201).json(safeUser(user));
   } catch (err) {
     if (err.code === 'P2002') {
@@ -70,12 +73,18 @@ async function updateUser(req, res, next) {
     const data = {};
     if (email) data.email = email;
     if (name) data.name = name;
-    if (password) data.password = await bcrypt.hash(password, SALT_ROUNDS);
+    if (password) {
+      if (!STRONG_PASSWORD_RE.test(password)) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character' });
+      }
+      data.password = await bcrypt.hash(password, SALT_ROUNDS);
+    }
 
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data,
     });
+    logger.info({ event: 'user_updated', userId: user.id, ip: req.ip, path: req.originalUrl }, 'User updated');
     return res.json(safeUser(user));
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'User not found' });
@@ -87,6 +96,7 @@ async function updateUser(req, res, next) {
 async function deleteUser(req, res, next) {
   try {
     await prisma.user.delete({ where: { id: req.params.id } });
+    logger.info({ event: 'user_deleted', userId: req.params.id, ip: req.ip, path: req.originalUrl }, 'User deleted');
     return res.status(204).send();
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'User not found' });

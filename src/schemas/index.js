@@ -17,7 +17,43 @@ function isNumber(v) { return typeof v === 'number' && !Number.isNaN(v); }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // ISO 8601 datetime (e.g. 2024-06-15T10:30:00.000Z)
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
-const URL_RE = /^https?:\/\/.+/;
+const URL_RE = /^https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+([\/\w\-.~:?#[\]@!$&'()*+,;=%]*)?$/;
+
+const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/**
+ * Recursively sanitize a parsed JSON value:
+ * - Reject objects with __proto__, constructor, or prototype keys
+ * - Reject functions
+ * Returns { safe: true, value } or { safe: false, reason }
+ */
+function sanitizeJsonValue(val, depth = 0) {
+  if (depth > 20) return { safe: false, reason: 'JSON nesting too deep' };
+  if (val === null || val === undefined) return { safe: true, value: val };
+  if (typeof val === 'function') return { safe: false, reason: 'Functions not allowed in JSON value' };
+  if (typeof val !== 'object') return { safe: true, value: val };
+
+  if (Array.isArray(val)) {
+    const arr = [];
+    for (const item of val) {
+      const result = sanitizeJsonValue(item, depth + 1);
+      if (!result.safe) return result;
+      arr.push(result.value);
+    }
+    return { safe: true, value: arr };
+  }
+
+  const obj = {};
+  for (const key of Object.keys(val)) {
+    if (DANGEROUS_KEYS.has(key)) {
+      return { safe: false, reason: `Forbidden key "${key}" in JSON value` };
+    }
+    const result = sanitizeJsonValue(val[key], depth + 1);
+    if (!result.safe) return result;
+    obj[key] = result.value;
+  }
+  return { safe: true, value: obj };
+}
 
 function err(field, message) {
   return { field, message };
@@ -37,8 +73,8 @@ const loginSchema = {
       out.email = data.email.trim().toLowerCase();
     }
 
-    if (!isString(data.password) || data.password.length < 6) {
-      errors.push(err('password', 'Password must be at least 6 characters'));
+    if (!isString(data.password) || data.password.length < 1) {
+      errors.push(err('password', 'Password is required'));
     } else {
       out.password = data.password;
     }
@@ -300,7 +336,12 @@ const upsertSiteContentSchema = {
     } else if (typeof data.value !== 'object') {
       errors.push(err('value', 'Value must be a JSON object'));
     } else {
-      out.value = data.value;
+      const sanitized = sanitizeJsonValue(data.value);
+      if (!sanitized.safe) {
+        errors.push(err('value', sanitized.reason));
+      } else {
+        out.value = sanitized.value;
+      }
     }
 
     return errors.length ? { success: false, errors } : { success: true, data: out };

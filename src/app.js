@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
 
@@ -34,7 +35,17 @@ const corsOptions = isProduction
       credentials: true,
     }
   : {
-      origin: true, // allow all origins in development
+      origin: (origin, callback) => {
+        const devOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+          .split(',')
+          .map((o) => o.trim())
+          .filter(Boolean);
+        if (!origin || devOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`CORS: origin '${origin}' not allowed`));
+        }
+      },
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
@@ -48,6 +59,24 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
+
+// ── Public GET rate limiter ──────────────────────────────────────────────────
+const publicGetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+// Apply to all public GET endpoints
+app.use('/api/treatments', publicGetLimiter);
+app.use('/api/blog', publicGetLimiter);
+app.use('/api/contact', publicGetLimiter);
+app.use('/api/home', publicGetLimiter);
+app.use('/api/about', publicGetLimiter);
+app.use('/api/footer', publicGetLimiter);
+app.use('/api/promo-banner', publicGetLimiter);
+app.use('/api/site-content', publicGetLimiter);
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {

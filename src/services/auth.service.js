@@ -8,22 +8,24 @@ const {
 
 function generateAccessToken(userId) {
   return jwt.sign({ sub: userId }, JWT_ACCESS_SECRET, {
+    algorithm: 'HS256',
     expiresIn: JWT_ACCESS_EXPIRES_IN,
   });
 }
 
 function generateRefreshToken(userId) {
   return jwt.sign({ sub: userId }, JWT_REFRESH_SECRET, {
+    algorithm: 'HS256',
     expiresIn: JWT_REFRESH_EXPIRES_IN,
   });
 }
 
 function verifyAccessToken(token) {
-  return jwt.verify(token, JWT_ACCESS_SECRET);
+  return jwt.verify(token, JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
 }
 
 function verifyRefreshToken(token) {
-  return jwt.verify(token, JWT_REFRESH_SECRET);
+  return jwt.verify(token, JWT_REFRESH_SECRET, { algorithms: ['HS256'] });
 }
 
 module.exports = {

@@ -7,6 +7,7 @@ const {
   verifyRefreshToken,
 } = require('../services/auth.service');
 const { JWT_REFRESH_EXPIRES_IN } = require('../config/env');
+const logger = require('../config/logger');
 
 async function login(req, res, next) {
   try {
@@ -17,11 +18,13 @@ async function login(req, res, next) {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      logger.warn({ event: 'login_user_not_found', email, ip: req.ip, path: req.originalUrl }, 'Login failed: user not found');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
+      logger.warn({ event: 'login_wrong_password', userId: user.id, ip: req.ip, path: req.originalUrl }, 'Login failed: wrong password');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -38,6 +41,8 @@ async function login(req, res, next) {
         where: { userId: user.id, expiresAt: { lt: new Date() } },
       }),
     ]);
+
+    logger.info({ event: 'login_success', userId: user.id, ip: req.ip, path: req.originalUrl }, 'Login successful');
 
     return res.json({
       accessToken,
@@ -72,6 +77,7 @@ async function refresh(req, res, next) {
     }
 
     const newAccessToken = generateAccessToken(payload.sub);
+    logger.info({ event: 'token_refresh', userId: payload.sub, ip: req.ip, path: req.originalUrl }, 'Token refreshed');
     return res.json({ accessToken: newAccessToken });
   } catch (err) {
     next(err);
@@ -86,6 +92,7 @@ async function logout(req, res, next) {
     }
 
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+    logger.info({ event: 'logout', ip: req.ip, path: req.originalUrl }, 'User logged out');
     return res.status(204).send();
   } catch (err) {
     next(err);

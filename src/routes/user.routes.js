@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
+const { requireRole } = require('../middlewares/requireRole.middleware');
 const {
   getMe,
   listUsers,
@@ -14,10 +15,10 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/me', getMe);
-router.get('/', listUsers);
+router.get('/', requireRole('ADMIN', 'RECEPTIONIST'), listUsers);
 router.get('/:id', getUser);
-router.post('/', createUser);
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
+router.post('/', requireRole('ADMIN'), createUser);
+router.put('/:id', requireRole('ADMIN'), updateUser);
+router.delete('/:id', requireRole('ADMIN'), deleteUser);
 
 module.exports = router;

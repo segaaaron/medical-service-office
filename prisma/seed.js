@@ -6,23 +6,30 @@ const prisma = new PrismaClient();
 
 async function main() {
   // ── Users ────────────────────────────────────────────────────────────────
+  if (!process.env.SEED_ADMIN_PASSWORD) {
+    throw new Error('SEED_ADMIN_PASSWORD env var is required. Do not use default passwords.');
+  }
+  if (!process.env.SEED_SECOND_PASSWORD) {
+    throw new Error('SEED_SECOND_PASSWORD env var is required. Do not use default passwords.');
+  }
+
   const adminEmail = process.env.SEED_ADMIN_EMAIL || 'dramedranoyasmin@gmail.com';
   const adminName  = process.env.SEED_ADMIN_NAME  || 'Dra. Yasmin Medrano';
-  const adminPass  = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || 'Admin@2026', 10);
+  const adminPass  = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 10);
 
   const admin = await prisma.user.upsert({
     where:  { email: adminEmail },
-    update: { password: adminPass, name: adminName },
-    create: { email: adminEmail, name: adminName, password: adminPass },
+    update: { password: adminPass, name: adminName, role: 'ADMIN' },
+    create: { email: adminEmail, name: adminName, password: adminPass, role: 'ADMIN' },
   });
 
   const secondEmail = process.env.SEED_SECOND_EMAIL || 'recepcion@consultorio.com';
-  const secondPass  = await bcrypt.hash(process.env.SEED_SECOND_PASSWORD || 'Recepcion@2026', 10);
+  const secondPass  = await bcrypt.hash(process.env.SEED_SECOND_PASSWORD, 10);
 
   const reception = await prisma.user.upsert({
     where:  { email: secondEmail },
-    update: { password: secondPass, name: 'Recepción' },
-    create: { email: secondEmail, name: 'Recepción', password: secondPass },
+    update: { password: secondPass, name: 'Recepción', role: 'RECEPTIONIST' },
+    create: { email: secondEmail, name: 'Recepción', password: secondPass, role: 'RECEPTIONIST' },
   });
 
   // ── Treatments ───────────────────────────────────────────────────────────
