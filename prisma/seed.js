@@ -6,31 +6,29 @@ const prisma = new PrismaClient();
 
 async function main() {
   // ── Users ────────────────────────────────────────────────────────────────
-  if (!process.env.SEED_ADMIN_PASSWORD) {
-    throw new Error('SEED_ADMIN_PASSWORD env var is required. Do not use default passwords.');
-  }
-  if (!process.env.SEED_SECOND_PASSWORD) {
-    throw new Error('SEED_SECOND_PASSWORD env var is required. Do not use default passwords.');
-  }
-
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'dramedranoyasmin@gmail.com';
-  const adminName  = process.env.SEED_ADMIN_NAME  || 'Dra. Yasmin Medrano';
-  const adminPass  = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 10);
-
-  const admin = await prisma.user.upsert({
-    where:  { email: adminEmail },
-    update: { password: adminPass, name: adminName, role: 'ADMIN' },
-    create: { email: adminEmail, name: adminName, password: adminPass, role: 'ADMIN' },
-  });
-
+  // If user already exists: only update role (never touch password).
+  // If user does not exist: create with password from env var (required only on first run).
+  const adminEmail  = process.env.SEED_ADMIN_EMAIL  || 'dramedranoyasmin@gmail.com';
+  const adminName   = process.env.SEED_ADMIN_NAME   || 'Dra. Yasmin Medrano';
   const secondEmail = process.env.SEED_SECOND_EMAIL || 'recepcion@consultorio.com';
-  const secondPass  = await bcrypt.hash(process.env.SEED_SECOND_PASSWORD, 10);
 
-  const reception = await prisma.user.upsert({
-    where:  { email: secondEmail },
-    update: { password: secondPass, name: 'Recepción', role: 'RECEPTIONIST' },
-    create: { email: secondEmail, name: 'Recepción', password: secondPass, role: 'RECEPTIONIST' },
-  });
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (existingAdmin) {
+    await prisma.user.update({ where: { email: adminEmail }, data: { role: 'ADMIN' } });
+  } else {
+    if (!process.env.SEED_ADMIN_PASSWORD) throw new Error('SEED_ADMIN_PASSWORD is required to create the admin user for the first time.');
+    const adminPass = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 10);
+    await prisma.user.create({ data: { email: adminEmail, name: adminName, password: adminPass, role: 'ADMIN' } });
+  }
+
+  const existingSecond = await prisma.user.findUnique({ where: { email: secondEmail } });
+  if (existingSecond) {
+    await prisma.user.update({ where: { email: secondEmail }, data: { role: 'RECEPTIONIST' } });
+  } else {
+    if (!process.env.SEED_SECOND_PASSWORD) throw new Error('SEED_SECOND_PASSWORD is required to create the receptionist user for the first time.');
+    const secondPass = await bcrypt.hash(process.env.SEED_SECOND_PASSWORD, 10);
+    await prisma.user.create({ data: { email: secondEmail, name: 'Recepción', password: secondPass, role: 'RECEPTIONIST' } });
+  }
 
   // ── Treatments ───────────────────────────────────────────────────────────
   const treatments = [
