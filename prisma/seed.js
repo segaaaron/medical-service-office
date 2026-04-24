@@ -5,6 +5,17 @@ const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
 async function main() {
+  // ── Ensure Role enum and column exist (safe to run multiple times) ────────
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TYPE "Role" AS ENUM ('ADMIN', 'RECEPTIONIST');
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "role" "Role" NOT NULL DEFAULT 'RECEPTIONIST';
+  `);
+
   // ── Users ────────────────────────────────────────────────────────────────
   // If user already exists: only update role (never touch password).
   // If user does not exist: create with password from env var (required only on first run).
