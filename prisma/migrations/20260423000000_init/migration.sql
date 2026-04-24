@@ -1,31 +1,30 @@
 -- CreateEnum
-CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
+DO $$ BEGIN
+  CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
-CREATE TABLE "User" (
+CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "RefreshToken" (
+CREATE TABLE IF NOT EXISTS "RefreshToken" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Treatment" (
+CREATE TABLE IF NOT EXISTS "Treatment" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -37,12 +36,10 @@ CREATE TABLE "Treatment" (
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "Treatment_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "BlogPost" (
+CREATE TABLE IF NOT EXISTS "BlogPost" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -53,12 +50,10 @@ CREATE TABLE "BlogPost" (
     "publishedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "BlogPost_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Appointment" (
+CREATE TABLE IF NOT EXISTS "Appointment" (
     "id" TEXT NOT NULL,
     "patientName" TEXT NOT NULL,
     "patientPhone" TEXT NOT NULL,
@@ -69,12 +64,10 @@ CREATE TABLE "Appointment" (
     "scheduledAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Contact" (
+CREATE TABLE IF NOT EXISTS "Contact" (
     "id" TEXT NOT NULL,
     "whatsappNumber" TEXT NOT NULL,
     "whatsappUrl" TEXT NOT NULL,
@@ -89,23 +82,19 @@ CREATE TABLE "Contact" (
     "locationDescription" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "Contact_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "SiteContent" (
+CREATE TABLE IF NOT EXISTS "SiteContent" (
     "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "value" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "SiteContent_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Footer" (
+CREATE TABLE IF NOT EXISTS "Footer" (
     "id" TEXT NOT NULL,
     "doctorName" TEXT,
     "specialty" TEXT,
@@ -121,12 +110,10 @@ CREATE TABLE "Footer" (
     "designedByText" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "Footer_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Home" (
+CREATE TABLE IF NOT EXISTS "Home" (
     "id" TEXT NOT NULL,
     "specialties" TEXT,
     "doctorName" TEXT,
@@ -146,12 +133,10 @@ CREATE TABLE "Home" (
     "faqs" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "Home_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "PromoBanner" (
+CREATE TABLE IF NOT EXISTS "PromoBanner" (
     "id" TEXT NOT NULL,
     "tag" TEXT,
     "title" TEXT,
@@ -166,12 +151,10 @@ CREATE TABLE "PromoBanner" (
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "PromoBanner_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "AboutUs" (
+CREATE TABLE IF NOT EXISTS "AboutUs" (
     "id" TEXT NOT NULL,
     "sectionLabel" TEXT,
     "doctorName" TEXT,
@@ -198,48 +181,32 @@ CREATE TABLE "AboutUs" (
     "feature4Description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-
     CONSTRAINT "AboutUs_pkey" PRIMARY KEY ("id")
 );
 
--- CreateUniqueIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+-- Indexes and constraints (IF NOT EXISTS where supported)
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "RefreshToken_token_key" ON "RefreshToken"("token");
+CREATE INDEX IF NOT EXISTS "RefreshToken_userId_idx" ON "RefreshToken"("userId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Treatment_slug_key" ON "Treatment"("slug");
+CREATE INDEX IF NOT EXISTS "Treatment_active_idx" ON "Treatment"("active");
+CREATE UNIQUE INDEX IF NOT EXISTS "BlogPost_slug_key" ON "BlogPost"("slug");
+CREATE INDEX IF NOT EXISTS "BlogPost_published_idx" ON "BlogPost"("published");
+CREATE INDEX IF NOT EXISTS "BlogPost_publishedAt_idx" ON "BlogPost"("publishedAt");
+CREATE INDEX IF NOT EXISTS "Appointment_status_idx" ON "Appointment"("status");
+CREATE INDEX IF NOT EXISTS "Appointment_scheduledAt_idx" ON "Appointment"("scheduledAt");
+CREATE UNIQUE INDEX IF NOT EXISTS "SiteContent_key_key" ON "SiteContent"("key");
+CREATE INDEX IF NOT EXISTS "SiteContent_key_idx" ON "SiteContent"("key");
 
--- CreateUniqueIndex
-CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
+-- Foreign keys (add only if not exists)
+DO $$ BEGIN
+  ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey"
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- CreateIndex
-CREATE INDEX "RefreshToken_userId_idx" ON "RefreshToken"("userId");
-
--- CreateUniqueIndex
-CREATE UNIQUE INDEX "Treatment_slug_key" ON "Treatment"("slug");
-
--- CreateIndex
-CREATE INDEX "Treatment_active_idx" ON "Treatment"("active");
-
--- CreateUniqueIndex
-CREATE UNIQUE INDEX "BlogPost_slug_key" ON "BlogPost"("slug");
-
--- CreateIndex
-CREATE INDEX "BlogPost_published_idx" ON "BlogPost"("published");
-
--- CreateIndex
-CREATE INDEX "BlogPost_publishedAt_idx" ON "BlogPost"("publishedAt");
-
--- CreateIndex
-CREATE INDEX "Appointment_status_idx" ON "Appointment"("status");
-
--- CreateIndex
-CREATE INDEX "Appointment_scheduledAt_idx" ON "Appointment"("scheduledAt");
-
--- CreateUniqueIndex
-CREATE UNIQUE INDEX "SiteContent_key_key" ON "SiteContent"("key");
-
--- CreateIndex
-CREATE INDEX "SiteContent_key_idx" ON "SiteContent"("key");
-
--- AddForeignKey
-ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_treatmentId_fkey" FOREIGN KEY ("treatmentId") REFERENCES "Treatment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_treatmentId_fkey"
+    FOREIGN KEY ("treatmentId") REFERENCES "Treatment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
