@@ -1,14 +1,21 @@
 #!/bin/sh
-set -e
 
 echo "Ensuring uploads directory exists..."
 mkdir -p /app/uploads
 
 echo "Running Prisma migrations..."
-npx prisma migrate deploy
+if npx prisma migrate deploy; then
+  echo "Migrations applied successfully."
+else
+  echo "WARNING: prisma migrate deploy failed or had warnings. Continuing..."
+fi
 
 echo "Running seed..."
-node prisma/seed.js
+if node prisma/seed.js; then
+  echo "Seed completed successfully."
+else
+  echo "WARNING: seed failed. Continuing..."
+fi
 
 echo "Starting server..."
 exec node server.js
