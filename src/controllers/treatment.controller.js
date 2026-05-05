@@ -9,7 +9,7 @@ async function listTreatments(req, res, next) {
     const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
 
-    const where = req.user ? {} : { active: true };
+    const where = {};
 
     const [treatments, total] = await Promise.all([
       prisma.treatment.findMany({
@@ -33,7 +33,6 @@ async function getTreatment(req, res, next) {
       where: { id: req.params.id },
     });
     if (!treatment) return res.status(404).json({ error: 'Tratamiento no encontrado' });
-    if (!treatment.active && !req.user) return res.status(404).json({ error: 'Tratamiento no encontrado' });
     return res.json(treatment);
   } catch (err) {
     next(err);
@@ -46,6 +45,7 @@ async function createTreatment(req, res, next) {
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(name);
+    if (!slug) return res.status(400).json({ error: 'El nombre debe contener al menos un carácter alfanumérico' });
 
     const treatment = await prisma.treatment.create({
       data: {

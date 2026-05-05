@@ -1,10 +1,8 @@
 require('./src/config/env');
 const app = require('./src/app');
 const { PORT } = require('./src/config/env');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./src/services/prisma.service');
 const logger = require('./src/config/logger');
-
-const prisma = new PrismaClient();
 
 const server = app.listen(PORT, () => {
   logger.info({ event: 'server_start', port: PORT }, `Server running on port ${PORT}`);

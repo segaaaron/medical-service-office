@@ -15,9 +15,9 @@ function isBoolean(v) { return typeof v === 'boolean'; }
 function isNumber(v) { return typeof v === 'number' && !Number.isNaN(v); }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// ISO 8601 datetime (e.g. 2024-06-15T10:30:00.000Z)
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 const URL_RE = /^https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+([\/\w\-.~:?#[\]@!$&'()*+,;=%]*)?$/;
+const UPLOAD_URL_RE = /^\/uploads\/[\w.\-]+$/;
 
 const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
@@ -121,13 +121,23 @@ const createTreatmentSchema = {
     }
 
     if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl)) {
-        errors.push(err('imageUrl', 'Image URL must be a string'));
+      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+        errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
       }
     } else {
       out.imageUrl = data.imageUrl ?? null;
+    }
+
+    if (data.active !== undefined) {
+      if (data.active === true || data.active === 'true') {
+        out.active = true;
+      } else if (data.active === false || data.active === 'false') {
+        out.active = false;
+      } else {
+        errors.push(err('active', 'active debe ser un booleano'));
+      }
     }
 
     return errors.length ? { success: false, errors } : { success: true, data: out };
@@ -181,9 +191,9 @@ const updateTreatmentSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null) {
-      if (!isString(data.imageUrl)) {
-        errors.push(err('imageUrl', 'Image URL must be a string'));
+    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
+      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+        errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
       }
@@ -236,8 +246,8 @@ const createBlogPostSchema = {
     }
 
     if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl)) {
-        errors.push(err('imageUrl', 'Image URL must be a string'));
+      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+        errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
       }
@@ -381,9 +391,9 @@ const updateBlogPostSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null) {
-      if (!isString(data.imageUrl)) {
-        errors.push(err('imageUrl', 'Image URL must be a string'));
+    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
+      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+        errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
       }
@@ -421,8 +431,8 @@ const upsertContactSchema = {
       out.whatsappNumber = data.whatsappNumber.trim();
     }
 
-    if (!isString(data.whatsappUrl) || data.whatsappUrl.trim().length < 1) {
-      errors.push(err('whatsappUrl', 'WhatsApp URL is required'));
+    if (!isString(data.whatsappUrl) || !URL_RE.test(data.whatsappUrl.trim())) {
+      errors.push(err('whatsappUrl', 'WhatsApp URL debe ser una URL válida'));
     } else {
       out.whatsappUrl = data.whatsappUrl.trim();
     }
@@ -439,8 +449,8 @@ const upsertContactSchema = {
       out.instagramUsername = data.instagramUsername.trim();
     }
 
-    if (!isString(data.instagramUrl) || data.instagramUrl.trim().length < 1) {
-      errors.push(err('instagramUrl', 'Instagram URL is required'));
+    if (!isString(data.instagramUrl) || !URL_RE.test(data.instagramUrl.trim())) {
+      errors.push(err('instagramUrl', 'Instagram URL debe ser una URL válida'));
     } else {
       out.instagramUrl = data.instagramUrl.trim();
     }
@@ -451,8 +461,8 @@ const upsertContactSchema = {
       out.facebookName = data.facebookName.trim();
     }
 
-    if (!isString(data.facebookUrl) || data.facebookUrl.trim().length < 1) {
-      errors.push(err('facebookUrl', 'Facebook URL is required'));
+    if (!isString(data.facebookUrl) || !URL_RE.test(data.facebookUrl.trim())) {
+      errors.push(err('facebookUrl', 'Facebook URL debe ser una URL válida'));
     } else {
       out.facebookUrl = data.facebookUrl.trim();
     }
@@ -518,6 +528,10 @@ const upsertAboutUsSchema = {
       }
     }
 
+    if (Object.keys(out).length === 0 && errors.length === 0) {
+      errors.push(err('body', 'Al menos un campo debe ser proporcionado'));
+    }
+
     return errors.length ? { success: false, errors } : { success: true, data: out };
   },
 };
@@ -560,6 +574,10 @@ const upsertFooterSchema = {
           }
         }
       }
+    }
+
+    if (Object.keys(out).length === 0 && errors.length === 0) {
+      errors.push(err('body', 'Al menos un campo debe ser proporcionado'));
     }
 
     return errors.length ? { success: false, errors } : { success: true, data: out };

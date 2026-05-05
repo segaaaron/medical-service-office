@@ -12,6 +12,6 @@ const router = Router();
 
 router.post('/login',   loginRateLimiter, validate(loginSchema), login);
 router.post('/refresh', refreshRateLimit, validate(refreshTokenSchema), refresh);
-router.post('/logout',  validate(refreshTokenSchema), logout);
+router.post('/logout',  refreshRateLimit, validate(refreshTokenSchema), logout);
 
 module.exports = router;

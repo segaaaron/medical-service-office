@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../services/prisma.service');
 const logger = require('../config/logger');
-const { BCRYPT_BCRYPT_SALT_ROUNDS, PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
+const { BCRYPT_SALT_ROUNDS, PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
 const STRONG_PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
 
 function safeUser(user) {

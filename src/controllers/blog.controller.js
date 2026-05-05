@@ -9,7 +9,7 @@ async function listPosts(req, res, next) {
     const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
 
-    const where = req.user ? {} : { published: true };
+    const where = {};
 
     const select = {
       id: true, title: true, slug: true, excerpt: true,
@@ -40,7 +40,6 @@ async function getPost(req, res, next) {
       where: { id: req.params.id },
     });
     if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
-    if (!post.published && !req.user) return res.status(404).json({ error: 'Publicación no encontrada' });
     return res.json(post);
   } catch (err) {
     next(err);
@@ -56,6 +55,7 @@ async function createPost(req, res, next) {
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(title);
+    if (!slug) return res.status(400).json({ error: 'El título debe contener al menos un carácter alfanumérico' });
 
     const post = await prisma.blogPost.create({
       data: {

@@ -28,8 +28,8 @@ const router = Router();
 router.post('/', appointmentRateLimit, validate(createAppointmentSchema), createAppointment);
 
 // Protected — only authenticated admins can manage appointments
-router.get('/', authenticate, listAppointments);
-router.get('/:id', authenticate, getAppointment);
+router.get('/', authenticate, requireRole('ADMIN'), listAppointments);
+router.get('/:id', authenticate, requireRole('ADMIN'), getAppointment);
 router.put('/:id', authenticate, requireRole('ADMIN'), updateAppointment);
 router.delete('/:id', authenticate, requireRole('ADMIN'), deleteAppointment);
 

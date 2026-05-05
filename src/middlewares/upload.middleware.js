@@ -38,8 +38,8 @@ async function compressAndSave(req, res, next) {
     const dest = path.join(UPLOAD_DIR, filename);
 
     await sharp(req.file.buffer)
+      .rotate()
       .webp({ quality: WEBP_QUALITY, effort: 6 })
-      .withMetadata()                   // preserva orientación EXIF
       .toFile(dest);
 
     req.imageUrl = `/uploads/${filename}`;
