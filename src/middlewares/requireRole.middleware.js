@@ -12,7 +12,7 @@ function requireRole(...roles) {
         { event: 'access_denied_role', userId: req.user?.id, role: req.user?.role, requiredRoles: roles, ip: req.ip, path: req.originalUrl },
         'Forbidden: insufficient role'
       );
-      return res.status(403).json({ error: 'Forbidden: insufficient permissions' });
+      return res.status(403).json({ error: 'Acceso denegado: permisos insuficientes' });
     }
     next();
   };

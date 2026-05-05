@@ -4,22 +4,28 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listPosts(req, res, next) {
   try {
-    const posts = await prisma.blogPost.findMany({
-      where: { published: true },
-      orderBy: { publishedAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        excerpt: true,
-        content: true,
-        imageUrl: true,
-        published: true,
-        publishedAt: true,
-        createdAt: true,
-      },
-    });
-    return res.json(posts);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const select = {
+      id: true, title: true, slug: true, excerpt: true,
+      content: true, imageUrl: true, published: true,
+      publishedAt: true, createdAt: true,
+    };
+
+    const [posts, total] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: { published: true },
+        orderBy: { publishedAt: 'desc' },
+        select,
+        skip,
+        take: limit,
+      }),
+      prisma.blogPost.count({ where: { published: true } }),
+    ]);
+
+    return res.json({ data: posts, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -30,7 +36,7 @@ async function getPost(req, res, next) {
     const post = await prisma.blogPost.findUnique({
       where: { id: req.params.id },
     });
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+    if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
     return res.json(post);
   } catch (err) {
     next(err);
@@ -62,7 +68,7 @@ async function createPost(req, res, next) {
     return res.status(201).json(post);
   } catch (err) {
     if (err.code === 'P2002') {
-      return res.status(409).json({ error: 'A post with this title already exists' });
+      return res.status(409).json({ error: 'Ya existe una publicación con ese título' });
     }
     next(err);
   }
@@ -76,7 +82,7 @@ async function updatePost(req, res, next) {
 
     // Always fetch current post to validate existence and support publishedAt logic
     const current = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
-    if (!current) return res.status(404).json({ error: 'Post not found' });
+    if (!current) return res.status(404).json({ error: 'Publicación no encontrada' });
 
     if (title !== undefined) {
       data.title = title;
@@ -111,10 +117,10 @@ async function updatePost(req, res, next) {
     });
     return res.json(post);
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Post not found' });
-    if (err.code === 'P2002') return res.status(409).json({ error: 'A post with this title already exists' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Publicación no encontrada' });
+    if (err.code === 'P2002') return res.status(409).json({ error: 'Ya existe una publicación con ese título' });
     if (err.code === 'P2023' || err.name === 'PrismaClientValidationError') {
-      return res.status(400).json({ error: 'Invalid post ID format' });
+      return res.status(400).json({ error: 'Formato de ID inválido' });
     }
     next(err);
   }
@@ -127,7 +133,7 @@ async function deletePost(req, res, next) {
     await prisma.blogPost.delete({ where: { id: req.params.id } });
     return res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Post not found' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Publicación no encontrada' });
     next(err);
   }
 }

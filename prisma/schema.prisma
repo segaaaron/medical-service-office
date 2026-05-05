@@ -41,7 +41,6 @@ model Treatment {
   name            String
   slug            String   @unique
   description     String?
-  longDescription String?
   price           Float?
   tag             String?
   imageUrl        String?

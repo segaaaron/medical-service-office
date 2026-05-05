@@ -4,11 +4,21 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function listTreatments(req, res, next) {
   try {
-    const treatments = await prisma.treatment.findMany({
-      where: { active: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    return res.json(treatments);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [treatments, total] = await Promise.all([
+      prisma.treatment.findMany({
+        where: { active: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.treatment.count({ where: { active: true } }),
+    ]);
+
+    return res.json({ data: treatments, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -19,7 +29,7 @@ async function getTreatment(req, res, next) {
     const treatment = await prisma.treatment.findUnique({
       where: { id: req.params.id },
     });
-    if (!treatment) return res.status(404).json({ error: 'Treatment not found' });
+    if (!treatment) return res.status(404).json({ error: 'Tratamiento no encontrado' });
     return res.json(treatment);
   } catch (err) {
     next(err);
@@ -47,7 +57,7 @@ async function createTreatment(req, res, next) {
     return res.status(201).json(treatment);
   } catch (err) {
     if (err.code === 'P2002') {
-      return res.status(409).json({ error: 'A treatment with this name already exists' });
+      return res.status(409).json({ error: 'Ya existe un tratamiento con ese nombre' });
     }
     next(err);
   }
@@ -60,7 +70,7 @@ async function updateTreatment(req, res, next) {
     const data = {};
 
     const current = await prisma.treatment.findUnique({ where: { id: req.params.id } });
-    if (!current) return res.status(404).json({ error: 'Treatment not found' });
+    if (!current) return res.status(404).json({ error: 'Tratamiento no encontrado' });
 
     if (name !== undefined) {
       data.name = name;
@@ -83,8 +93,8 @@ async function updateTreatment(req, res, next) {
     });
     return res.json(treatment);
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Treatment not found' });
-    if (err.code === 'P2002') return res.status(409).json({ error: 'A treatment with this name already exists' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Tratamiento no encontrado' });
+    if (err.code === 'P2002') return res.status(409).json({ error: 'Ya existe un tratamiento con ese nombre' });
     next(err);
   }
 }
@@ -96,7 +106,7 @@ async function deleteTreatment(req, res, next) {
     await prisma.treatment.delete({ where: { id: req.params.id } });
     return res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Treatment not found' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Tratamiento no encontrado' });
     next(err);
   }
 }

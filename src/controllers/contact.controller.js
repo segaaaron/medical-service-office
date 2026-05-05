@@ -3,7 +3,7 @@ const prisma = require('../services/prisma.service');
 async function getContact(req, res, next) {
   try {
     const contact = await prisma.contact.findFirst();
-    if (!contact) return res.status(404).json({ error: 'Contact not found' });
+    if (!contact) return res.status(404).json({ error: 'Información de contacto no encontrada' });
     return res.json(contact);
   } catch (err) {
     next(err);

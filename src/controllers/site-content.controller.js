@@ -11,7 +11,7 @@ async function getSiteContent(req, res, next) {
     });
 
     if (!record) {
-      return res.status(404).json({ error: 'Content not found' });
+      return res.status(404).json({ error: 'Contenido no encontrado' });
     }
 
     return res.json(record);
@@ -22,10 +22,16 @@ async function getSiteContent(req, res, next) {
 
 async function listSiteContent(req, res, next) {
   try {
-    const records = await prisma.siteContent.findMany({
-      orderBy: { updatedAt: 'desc' },
-    });
-    return res.json(records);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const [records, total] = await Promise.all([
+      prisma.siteContent.findMany({ orderBy: { updatedAt: 'desc' }, skip, take: limit }),
+      prisma.siteContent.count(),
+    ]);
+
+    return res.json({ data: records, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -64,7 +70,7 @@ async function deleteSiteContent(req, res, next) {
     await prisma.siteContent.delete({ where: { key } });
     return res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Content not found' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Contenido no encontrado' });
     next(err);
   }
 }

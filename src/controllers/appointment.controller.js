@@ -5,20 +5,30 @@ const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
 async function listAppointments(req, res, next) {
   try {
     const { status } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
     const where = {};
     if (status) {
       if (!VALID_STATUSES.includes(status)) {
-        return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+        return res.status(400).json({ error: `El estado debe ser uno de: ${VALID_STATUSES.join(', ')}` });
       }
       where.status = status;
     }
 
-    const appointments = await prisma.appointment.findMany({
-      where,
-      include: { treatment: { select: { id: true, name: true, tag: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    return res.json(appointments);
+    const [appointments, total] = await Promise.all([
+      prisma.appointment.findMany({
+        where,
+        include: { treatment: { select: { id: true, name: true, tag: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.appointment.count({ where }),
+    ]);
+
+    return res.json({ data: appointments, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -30,7 +40,7 @@ async function getAppointment(req, res, next) {
       where: { id: req.params.id },
       include: { treatment: { select: { id: true, name: true, tag: true } } },
     });
-    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+    if (!appointment) return res.status(404).json({ error: 'Cita no encontrada' });
     return res.json(appointment);
   } catch (err) {
     next(err);
@@ -76,7 +86,7 @@ async function updateAppointment(req, res, next) {
     if (scheduledAt !== undefined) data.scheduledAt = scheduledAt ? new Date(scheduledAt) : null;
     if (status !== undefined) {
       if (!VALID_STATUSES.includes(status)) {
-        return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+        return res.status(400).json({ error: `El estado debe ser uno de:${VALID_STATUSES.join(', ')}` });
       }
       data.status = status;
     }
@@ -88,7 +98,7 @@ async function updateAppointment(req, res, next) {
     });
     return res.json(appointment);
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Appointment not found' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Cita no encontrada' });
     next(err);
   }
 }
@@ -98,7 +108,7 @@ async function deleteAppointment(req, res, next) {
     await prisma.appointment.delete({ where: { id: req.params.id } });
     return res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Appointment not found' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Cita no encontrada' });
     next(err);
   }
 }

@@ -2,34 +2,33 @@ require('./src/config/env');
 const app = require('./src/app');
 const { PORT } = require('./src/config/env');
 const { PrismaClient } = require('@prisma/client');
+const logger = require('./src/config/logger');
 
 const prisma = new PrismaClient();
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info({ event: 'server_start', port: PORT }, `Server running on port ${PORT}`);
 });
 
 // ── Graceful shutdown ────────────────────────────────────────────────────────
 async function shutdown(signal) {
-  console.log(`\n${signal} received — shutting down gracefully…`);
+  logger.info({ event: 'shutdown_start', signal }, `${signal} received — shutting down gracefully…`);
 
-  // Stop accepting new connections
   server.close(async () => {
-    console.log('HTTP server closed.');
+    logger.info({ event: 'http_closed' }, 'HTTP server closed.');
 
     try {
       await prisma.$disconnect();
-      console.log('Prisma client disconnected.');
+      logger.info({ event: 'prisma_disconnected' }, 'Prisma client disconnected.');
     } catch (err) {
-      console.error('Error disconnecting Prisma:', err);
+      logger.error({ event: 'prisma_disconnect_error', err }, 'Error disconnecting Prisma.');
     }
 
     process.exit(0);
   });
 
-  // Force exit if graceful shutdown takes too long
   setTimeout(() => {
-    console.error('Graceful shutdown timed out — forcing exit.');
+    logger.error({ event: 'shutdown_timeout' }, 'Graceful shutdown timed out — forcing exit.');
     process.exit(1);
   }, 10_000).unref();
 }

@@ -4,7 +4,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 async function getAboutUs(req, res, next) {
   try {
     const aboutUs = await prisma.aboutUs.findFirst();
-    if (!aboutUs) return res.status(404).json({ error: 'About us content not found' });
+    if (!aboutUs) return res.status(404).json({ error: 'Contenido "Acerca de" no encontrado' });
     return res.json(aboutUs);
   } catch (err) {
     next(err);

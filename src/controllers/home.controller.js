@@ -3,7 +3,7 @@ const prisma = require('../services/prisma.service');
 async function getHome(req, res, next) {
   try {
     const home = await prisma.home.findFirst();
-    if (!home) return res.status(404).json({ error: 'Home content not found' });
+    if (!home) return res.status(404).json({ error: 'Contenido del inicio no encontrado' });
     return res.json(home);
   } catch (err) {
     next(err);

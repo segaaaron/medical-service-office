@@ -1,4 +1,5 @@
 const { Router } = require('express');
+const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
 const {
@@ -8,11 +9,16 @@ const {
   updateAppointment,
   deleteAppointment,
 } = require('../controllers/appointment.controller');
-const { createRateLimit } = require('../middlewares/rate-limit.middleware');
 const { validate } = require('../middlewares/validate.middleware');
 const { createAppointmentSchema } = require('../schemas/index');
 
-const appointmentRateLimit = createRateLimit(5, 60 * 60 * 1000); // 5 req / hour
+const appointmentRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes de cita. Por favor intenta en una hora.' },
+});
 
 const router = Router();
 

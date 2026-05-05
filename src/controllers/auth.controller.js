@@ -15,13 +15,13 @@ async function login(req, res, next) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       logger.warn({ event: 'login_user_not_found', email, ip: req.ip, path: req.originalUrl }, 'Login failed: user not found');
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       logger.warn({ event: 'login_wrong_password', userId: user.id, ip: req.ip, path: req.originalUrl }, 'Login failed: wrong password');
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const accessToken = generateAccessToken(user.id);
@@ -54,14 +54,14 @@ async function refresh(req, res, next) {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      return res.status(400).json({ error: 'refreshToken is required' });
+      return res.status(400).json({ error: 'El refreshToken es requerido' });
     }
 
     let payload;
     try {
       payload = verifyRefreshToken(refreshToken);
     } catch {
-      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+      return res.status(401).json({ error: 'Token de refresco inválido o expirado' });
     }
 
     const stored = await prisma.refreshToken.findUnique({
@@ -69,7 +69,7 @@ async function refresh(req, res, next) {
     });
 
     if (!stored || stored.expiresAt < new Date()) {
-      return res.status(401).json({ error: 'Refresh token not found or expired' });
+      return res.status(401).json({ error: 'Token de refresco no encontrado o expirado' });
     }
 
     const newAccessToken = generateAccessToken(payload.sub);
@@ -94,7 +94,7 @@ async function logout(req, res, next) {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      return res.status(400).json({ error: 'refreshToken is required' });
+      return res.status(400).json({ error: 'El refreshToken es requerido' });
     }
 
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });

@@ -13,7 +13,7 @@ function safeUser(user) {
 async function getMe(req, res, next) {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
     return res.json(safeUser(user));
   } catch (err) {
     next(err);
@@ -22,8 +22,16 @@ async function getMe(req, res, next) {
 
 async function listUsers(req, res, next) {
   try {
-    const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(users.map(safeUser));
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({ orderBy: { createdAt: 'desc' }, skip, take: limit }),
+      prisma.user.count(),
+    ]);
+
+    return res.json({ data: users.map(safeUser), total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -32,7 +40,7 @@ async function listUsers(req, res, next) {
 async function getUser(req, res, next) {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
     return res.json(safeUser(user));
   } catch (err) {
     next(err);
@@ -45,13 +53,13 @@ async function createUser(req, res, next) {
   try {
     const { email, name, password } = req.body;
     if (!email || !name || !password) {
-      return res.status(400).json({ error: 'email, name, and password are required' });
+      return res.status(400).json({ error: 'email, nombre y contraseña son requeridos' });
     }
     if (!EMAIL_RE.test(email)) {
-      return res.status(400).json({ error: 'email must be a valid email address' });
+      return res.status(400).json({ error: 'El email debe ser una dirección válida' });
     }
     if (!STRONG_PASSWORD_RE.test(password)) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character' });
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial' });
     }
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await prisma.user.create({
@@ -61,7 +69,7 @@ async function createUser(req, res, next) {
     return res.status(201).json(safeUser(user));
   } catch (err) {
     if (err.code === 'P2002') {
-      return res.status(409).json({ error: 'Email already in use' });
+      return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
     }
     next(err);
   }
@@ -83,7 +91,7 @@ async function updateUser(req, res, next) {
     if (name) data.name = name;
     if (password) {
       if (!STRONG_PASSWORD_RE.test(password)) {
-        return res.status(400).json({ error: 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character' });
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial' });
       }
       data.password = await bcrypt.hash(password, SALT_ROUNDS);
     }
@@ -95,8 +103,8 @@ async function updateUser(req, res, next) {
     logger.info({ event: 'user_updated', userId: user.id, ip: req.ip, path: req.originalUrl }, 'User updated');
     return res.json(safeUser(user));
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'User not found' });
-    if (err.code === 'P2002') return res.status(409).json({ error: 'Email already in use' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (err.code === 'P2002') return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
     next(err);
   }
 }
@@ -110,7 +118,7 @@ async function deleteUser(req, res, next) {
     logger.info({ event: 'user_deleted', userId: req.params.id, ip: req.ip, path: req.originalUrl }, 'User deleted');
     return res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'User not found' });
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Usuario no encontrado' });
     next(err);
   }
 }

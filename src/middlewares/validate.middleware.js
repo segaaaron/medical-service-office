@@ -12,7 +12,7 @@ function validate(schema) {
 
     if (!result.success) {
       return res.status(400).json({
-        error: 'Validation failed',
+        error: 'Error de validación',
         details: result.errors,
       });
     }

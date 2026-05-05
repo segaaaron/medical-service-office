@@ -4,7 +4,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 async function getPromoBanner(req, res, next) {
   try {
     const banner = await prisma.promoBanner.findFirst();
-    if (!banner) return res.status(404).json({ error: 'Promo banner not found' });
+    if (!banner) return res.status(404).json({ error: 'Banner promocional no encontrado' });
     return res.json(banner);
   } catch (err) {
     next(err);
