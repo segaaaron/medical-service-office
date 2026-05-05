@@ -5,6 +5,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
+const { BODY_LIMIT, PUBLIC_RATE_LIMIT_MAX, PUBLIC_RATE_LIMIT_WINDOW_MS } = require('./config/env');
 
 const app = express();
 
@@ -61,12 +62,12 @@ app.options('/{*path}', cors(corsOptions)); // pre-flight for all routes
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: BODY_LIMIT }));
 
 // ── Public GET rate limiter ──────────────────────────────────────────────────
 const publicGetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  windowMs: PUBLIC_RATE_LIMIT_WINDOW_MS,
+  max: PUBLIC_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },

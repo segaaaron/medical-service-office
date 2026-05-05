@@ -1,4 +1,5 @@
 const prisma = require('../services/prisma.service');
+const { PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
 
 const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
 
@@ -6,7 +7,7 @@ async function listAppointments(req, res, next) {
   try {
     const { status } = req.query;
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
 
     const where = {};

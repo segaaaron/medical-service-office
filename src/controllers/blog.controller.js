@@ -1,12 +1,15 @@
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
+const { PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
 
 async function listPosts(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
+
+    const where = req.user ? {} : { published: true };
 
     const select = {
       id: true, title: true, slug: true, excerpt: true,
@@ -16,13 +19,13 @@ async function listPosts(req, res, next) {
 
     const [posts, total] = await Promise.all([
       prisma.blogPost.findMany({
-        where: { published: true },
-        orderBy: { publishedAt: 'desc' },
+        where,
+        orderBy: { createdAt: 'desc' },
         select,
         skip,
         take: limit,
       }),
-      prisma.blogPost.count({ where: { published: true } }),
+      prisma.blogPost.count({ where }),
     ]);
 
     return res.json({ data: posts, total, page, limit, totalPages: Math.ceil(total / limit) });
@@ -37,6 +40,7 @@ async function getPost(req, res, next) {
       where: { id: req.params.id },
     });
     if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
+    if (!post.published && !req.user) return res.status(404).json({ error: 'Publicación no encontrada' });
     return res.json(post);
   } catch (err) {
     next(err);
@@ -52,7 +56,6 @@ async function createPost(req, res, next) {
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(title);
-    const isPublished = published === true;
 
     const post = await prisma.blogPost.create({
       data: {
@@ -61,8 +64,7 @@ async function createPost(req, res, next) {
         excerpt: excerpt ?? null,
         content,
         imageUrl: imageUrl || null,
-        published: isPublished,
-        publishedAt: isPublished ? new Date() : null,
+        published: published ?? false,
       },
     });
     return res.status(201).json(post);
@@ -80,7 +82,6 @@ async function updatePost(req, res, next) {
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? undefined;
     const data = {};
 
-    // Always fetch current post to validate existence and support publishedAt logic
     const current = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
     if (!current) return res.status(404).json({ error: 'Publicación no encontrada' });
 
@@ -104,11 +105,6 @@ async function updatePost(req, res, next) {
 
     if (published !== undefined) {
       data.published = published;
-      if (data.published && !current.publishedAt) {
-        data.publishedAt = new Date();
-      } else if (!data.published) {
-        data.publishedAt = null;
-      }
     }
 
     const post = await prisma.blogPost.update({

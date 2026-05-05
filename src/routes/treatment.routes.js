@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
+const { optionalAuth } = require('../middlewares/optionalAuth.middleware');
 const { upload, compressAndSave, mergeImageUrl } = require('../middlewares/upload.middleware');
 const {
   listTreatments,
@@ -14,8 +15,8 @@ const { createTreatmentSchema, updateTreatmentSchema } = require('../schemas/ind
 
 const router = Router();
 
-router.get('/', listTreatments);
-router.get('/:id', getTreatment);
+router.get('/', optionalAuth, listTreatments);
+router.get('/:id', optionalAuth, getTreatment);
 
 router.post('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, validate(createTreatmentSchema), createTreatment);
 router.put('/:id', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, validate(updateTreatmentSchema), updateTreatment);

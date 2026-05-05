@@ -1,21 +1,24 @@
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
+const { PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
 
 async function listTreatments(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
+
+    const where = req.user ? {} : { active: true };
 
     const [treatments, total] = await Promise.all([
       prisma.treatment.findMany({
-        where: { active: true },
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
-      prisma.treatment.count({ where: { active: true } }),
+      prisma.treatment.count({ where }),
     ]);
 
     return res.json({ data: treatments, total, page, limit, totalPages: Math.ceil(total / limit) });
@@ -30,6 +33,7 @@ async function getTreatment(req, res, next) {
       where: { id: req.params.id },
     });
     if (!treatment) return res.status(404).json({ error: 'Tratamiento no encontrado' });
+    if (!treatment.active && !req.user) return res.status(404).json({ error: 'Tratamiento no encontrado' });
     return res.json(treatment);
   } catch (err) {
     next(err);
@@ -38,7 +42,7 @@ async function getTreatment(req, res, next) {
 
 async function createTreatment(req, res, next) {
   try {
-    const { name, description, price, tag } = req.body;
+    const { name, description, price, tag, active } = req.body;
     const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
 
     const slug = toSlug(name);
@@ -51,7 +55,7 @@ async function createTreatment(req, res, next) {
         price: price ?? null,
         tag: tag ?? null,
         imageUrl: imageUrl || null,
-        active: true,
+        active: active ?? false,
       },
     });
     return res.status(201).json(treatment);

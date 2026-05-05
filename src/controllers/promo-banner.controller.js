@@ -29,7 +29,7 @@ async function upsertPromoBanner(req, res, next) {
       banner = await prisma.promoBanner.update({ where: { id: existing.id }, data });
       return res.json(banner);
     } else {
-      banner = await prisma.promoBanner.create({ data });
+      banner = await prisma.promoBanner.create({ data: { ...data, active: data.active ?? false } });
       return res.status(201).json(banner);
     }
   } catch (err) {

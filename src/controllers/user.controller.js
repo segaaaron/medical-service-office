@@ -1,8 +1,7 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../services/prisma.service');
 const logger = require('../config/logger');
-
-const SALT_ROUNDS = 10;
+const { BCRYPT_BCRYPT_SALT_ROUNDS, PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
 const STRONG_PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
 
 function safeUser(user) {
@@ -23,7 +22,7 @@ async function getMe(req, res, next) {
 async function listUsers(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
@@ -61,7 +60,7 @@ async function createUser(req, res, next) {
     if (!STRONG_PASSWORD_RE.test(password)) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial' });
     }
-    const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+    const hashed = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
     const user = await prisma.user.create({
       data: { email, name, password: hashed },
     });
@@ -79,21 +78,21 @@ async function updateUser(req, res, next) {
   try {
     const { email, name, password } = req.body;
     const data = {};
-    if (!email && !name && !password) {
+    if (email === undefined && name === undefined && password === undefined) {
       return res.status(400).json({ error: 'Al menos un campo debe ser proporcionado: email, nombre o contraseña' });
     }
-    if (email) {
+    if (email !== undefined) {
       if (!EMAIL_RE.test(email)) {
         return res.status(400).json({ error: 'El email debe ser una dirección válida' });
       }
       data.email = email;
     }
-    if (name) data.name = name;
-    if (password) {
+    if (name !== undefined) data.name = name;
+    if (password !== undefined) {
       if (!STRONG_PASSWORD_RE.test(password)) {
         return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial' });
       }
-      data.password = await bcrypt.hash(password, SALT_ROUNDS);
+      data.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
     }
 
     const user = await prisma.user.update({

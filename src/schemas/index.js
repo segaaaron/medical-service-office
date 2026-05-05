@@ -648,8 +648,25 @@ const upsertHomeSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// refreshTokenSchema
+// ---------------------------------------------------------------------------
+const refreshTokenSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+    if (!isString(data.refreshToken) || data.refreshToken.trim().length < 1) {
+      errors.push(err('refreshToken', 'refreshToken es requerido'));
+    } else {
+      out.refreshToken = data.refreshToken.trim();
+    }
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
+  refreshTokenSchema,
   createTreatmentSchema,
   updateTreatmentSchema,
   createBlogPostSchema,

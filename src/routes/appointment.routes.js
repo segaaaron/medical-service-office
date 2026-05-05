@@ -12,9 +12,11 @@ const {
 const { validate } = require('../middlewares/validate.middleware');
 const { createAppointmentSchema } = require('../schemas/index');
 
+const { APPOINTMENT_RATE_LIMIT_MAX, APPOINTMENT_RATE_LIMIT_WINDOW_MS } = require('../config/env');
+
 const appointmentRateLimit = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
+  windowMs: APPOINTMENT_RATE_LIMIT_WINDOW_MS,
+  max: APPOINTMENT_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiadas solicitudes de cita. Por favor intenta en una hora.' },
@@ -28,7 +30,7 @@ router.post('/', appointmentRateLimit, validate(createAppointmentSchema), create
 // Protected — only authenticated admins can manage appointments
 router.get('/', authenticate, listAppointments);
 router.get('/:id', authenticate, getAppointment);
-router.put('/:id', authenticate, requireRole('ADMIN', 'RECEPTIONIST'), updateAppointment);
-router.delete('/:id', authenticate, requireRole('ADMIN', 'RECEPTIONIST'), deleteAppointment);
+router.put('/:id', authenticate, requireRole('ADMIN'), updateAppointment);
+router.delete('/:id', authenticate, requireRole('ADMIN'), deleteAppointment);
 
 module.exports = router;

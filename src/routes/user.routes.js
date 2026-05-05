@@ -15,7 +15,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/me', getMe);
-router.get('/', requireRole('ADMIN', 'RECEPTIONIST'), listUsers);
+router.get('/', requireRole('ADMIN'), listUsers);
 router.get('/:id', requireRole('ADMIN'), getUser);
 router.post('/', requireRole('ADMIN'), createUser);
 router.put('/:id', requireRole('ADMIN'), updateUser);

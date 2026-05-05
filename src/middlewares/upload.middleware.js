@@ -2,6 +2,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const { UPLOAD_MAX_SIZE_MB, WEBP_QUALITY } = require('../config/env');
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -21,7 +22,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB máximo de entrada
+  limits: { fileSize: UPLOAD_MAX_SIZE_MB * 1024 * 1024 },
 });
 
 /**
@@ -37,7 +38,7 @@ async function compressAndSave(req, res, next) {
     const dest = path.join(UPLOAD_DIR, filename);
 
     await sharp(req.file.buffer)
-      .webp({ quality: 82, effort: 6 }) // 82% calidad WebP — nitidez alta, peso mínimo
+      .webp({ quality: WEBP_QUALITY, effort: 6 })
       .withMetadata()                   // preserva orientación EXIF
       .toFile(dest);
 
