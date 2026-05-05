@@ -15,24 +15,23 @@ async function upsertAboutUs(req, res, next) {
   try {
     const data = { ...req.body };
 
+    const existing = await prisma.aboutUs.findFirst();
+
     if (req.imageUrl) {
-      const existing = await prisma.aboutUs.findFirst();
       if (existing?.imageUrl && existing.imageUrl !== req.imageUrl) {
         deleteUploadedFile(existing.imageUrl);
       }
       data.imageUrl = req.imageUrl;
     }
 
-    const existing = await prisma.aboutUs.findFirst();
-
     let aboutUs;
     if (existing) {
       aboutUs = await prisma.aboutUs.update({ where: { id: existing.id }, data });
+      return res.json(aboutUs);
     } else {
       aboutUs = await prisma.aboutUs.create({ data });
+      return res.status(201).json(aboutUs);
     }
-
-    return res.json(aboutUs);
   } catch (err) {
     next(err);
   }

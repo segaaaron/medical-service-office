@@ -33,11 +33,11 @@ async function upsertContact(req, res, next) {
     let contact;
     if (existing) {
       contact = await prisma.contact.update({ where: { id: existing.id }, data });
+      return res.json(contact);
     } else {
       contact = await prisma.contact.create({ data });
+      return res.status(201).json(contact);
     }
-
-    return res.json(contact);
   } catch (err) {
     next(err);
   }

@@ -40,8 +40,10 @@ async function getAppointment(req, res, next) {
 async function createAppointment(req, res, next) {
   try {
     const { patientName, patientPhone, patientEmail, treatmentId, notes, scheduledAt } = req.body;
-    if (!patientName || !patientPhone || !treatmentId) {
-      return res.status(400).json({ error: 'patientName, patientPhone, and treatmentId are required' });
+
+    const treatment = await prisma.treatment.findUnique({ where: { id: treatmentId }, select: { id: true, active: true } });
+    if (!treatment || !treatment.active) {
+      return res.status(422).json({ error: 'El tratamiento seleccionado no está disponible' });
     }
 
     const appointment = await prisma.appointment.create({

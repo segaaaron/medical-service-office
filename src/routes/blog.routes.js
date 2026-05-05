@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
+const { requireRole } = require('../middlewares/requireRole.middleware');
 const { upload, compressAndSave, mergeImageUrl } = require('../middlewares/upload.middleware');
 const {
   listPosts,
@@ -17,10 +18,10 @@ const router = Router();
 router.get('/', listPosts);
 router.get('/:id', getPost);
 
-router.post('/', authenticate, upload.single('image'), compressAndSave, mergeImageUrl, validate(createBlogPostSchema), createPost);
-router.put('/:id', authenticate, upload.single('image'), compressAndSave, mergeImageUrl, validate(updateBlogPostSchema), updatePost);
-router.delete('/:id', authenticate, deletePost);
+router.post('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, validate(createBlogPostSchema), createPost);
+router.put('/:id', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, validate(updateBlogPostSchema), updatePost);
+router.delete('/:id', authenticate, requireRole('ADMIN'), deletePost);
 
-router.post('/upload-image', authenticate, upload.single('image'), compressAndSave, uploadImage);
+router.post('/upload-image', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, uploadImage);
 
 module.exports = router;

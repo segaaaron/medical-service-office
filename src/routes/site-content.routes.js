@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
+const { requireRole } = require('../middlewares/requireRole.middleware');
 const { upload, compressAndSave } = require('../middlewares/upload.middleware');
 const { validate } = require('../middlewares/validate.middleware');
 const { upsertSiteContentSchema } = require('../schemas/index');
@@ -32,10 +33,10 @@ router.get('/:key', getSiteContent);
 
 // Protected — only authenticated admins
 // upload.single('image') permite recibir multipart/form-data (igual que el blog)
-router.put('/', authenticate, upload.single('image'), compressAndSave, parseValueJson, validate(upsertSiteContentSchema), upsertSiteContent);
-router.delete('/:key', authenticate, deleteSiteContent);
+router.put('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, parseValueJson, validate(upsertSiteContentSchema), upsertSiteContent);
+router.delete('/:key', authenticate, requireRole('ADMIN'), deleteSiteContent);
 
 // Upload de imagen para secciones de contenido (ej. foto del doctor en treatmentsPage)
-router.post('/upload-image', authenticate, upload.single('image'), compressAndSave, uploadImage);
+router.post('/upload-image', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, uploadImage);
 
 module.exports = router;

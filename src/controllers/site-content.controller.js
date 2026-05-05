@@ -70,6 +70,9 @@ async function deleteSiteContent(req, res, next) {
 }
 
 async function uploadImage(req, res) {
+  if (!req.imageUrl) {
+    return res.status(400).json({ error: 'No se proporcionó ningún archivo de imagen' });
+  }
   return res.json({ imageUrl: req.imageUrl });
 }
 

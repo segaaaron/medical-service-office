@@ -18,11 +18,11 @@ async function upsertFooter(req, res, next) {
     let footer;
     if (existing) {
       footer = await prisma.footer.update({ where: { id: existing.id }, data });
+      return res.json(footer);
     } else {
       footer = await prisma.footer.create({ data });
+      return res.status(201).json(footer);
     }
-
-    return res.json(footer);
   } catch (err) {
     next(err);
   }

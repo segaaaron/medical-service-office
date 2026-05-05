@@ -289,8 +289,9 @@ const createAppointmentSchema = {
       out.patientEmail = data.patientEmail ?? '';
     }
 
-    if (!isString(data.treatmentId) || data.treatmentId.trim().length < 1) {
-      errors.push(err('treatmentId', 'treatmentId is required'));
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!isString(data.treatmentId) || !UUID_RE.test(data.treatmentId.trim())) {
+      errors.push(err('treatmentId', 'treatmentId debe ser un UUID válido'));
     } else {
       out.treatmentId = data.treatmentId.trim();
     }
@@ -522,11 +523,128 @@ const upsertAboutUsSchema = {
 };
 
 // ---------------------------------------------------------------------------
+// upsertFooterSchema
+// ---------------------------------------------------------------------------
+const FOOTER_STRING_FIELDS = [
+  'doctorName', 'specialty', 'description',
+  'whatsappUrl', 'facebookUrl', 'instagramUrl',
+  'copyrightText', 'designedByText',
+];
+const FOOTER_JSON_FIELDS = ['facialTreatments', 'bodyTreatments', 'officeLinks', 'legalLinks'];
+
+const upsertFooterSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    for (const field of FOOTER_STRING_FIELDS) {
+      if (data[field] !== undefined && data[field] !== null) {
+        if (!isString(data[field])) {
+          errors.push(err(field, `${field} debe ser texto`));
+        } else {
+          out[field] = data[field];
+        }
+      }
+    }
+
+    for (const field of FOOTER_JSON_FIELDS) {
+      if (data[field] !== undefined && data[field] !== null) {
+        if (typeof data[field] !== 'object') {
+          errors.push(err(field, `${field} debe ser un arreglo o objeto JSON`));
+        } else {
+          const sanitized = sanitizeJsonValue(data[field]);
+          if (!sanitized.safe) {
+            errors.push(err(field, sanitized.reason));
+          } else {
+            out[field] = sanitized.value;
+          }
+        }
+      }
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// upsertPromoBannerSchema
+// ---------------------------------------------------------------------------
+const PROMO_BANNER_STRING_FIELDS = [
+  'tag', 'title', 'highlightedText', 'description',
+  'doctorName', 'location', 'whatsappText', 'whatsappUrl',
+  'dismissText', 'imageUrl',
+];
+
+const upsertPromoBannerSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    for (const field of PROMO_BANNER_STRING_FIELDS) {
+      if (data[field] !== undefined && data[field] !== null) {
+        if (!isString(data[field])) {
+          errors.push(err(field, `${field} debe ser texto`));
+        } else {
+          out[field] = data[field];
+        }
+      }
+    }
+
+    if (data.active !== undefined) {
+      if (data.active === true || data.active === 'true') {
+        out.active = true;
+      } else if (data.active === false || data.active === 'false') {
+        out.active = false;
+      } else {
+        errors.push(err('active', 'active debe ser un booleano'));
+      }
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
+// ---------------------------------------------------------------------------
 // upsertHomeSchema
 // ---------------------------------------------------------------------------
+const HOME_STRING_FIELDS = [
+  'specialties', 'doctorName', 'subtitle', 'description',
+  'highlightedText', 'btn1Text', 'btn2Text',
+  'stat1Value', 'stat1Label',
+  'stat2Value', 'stat2Label',
+  'stat3Value', 'stat3Label',
+  'faqSectionLabel', 'faqTitle',
+];
+
 const upsertHomeSchema = {
   validate(data) {
-    return { success: true, data };
+    const errors = [];
+    const out = {};
+
+    for (const field of HOME_STRING_FIELDS) {
+      if (data[field] !== undefined && data[field] !== null) {
+        if (!isString(data[field])) {
+          errors.push(err(field, `${field} debe ser texto`));
+        } else {
+          out[field] = data[field];
+        }
+      }
+    }
+
+    if (data.faqs !== undefined && data.faqs !== null) {
+      if (!Array.isArray(data.faqs)) {
+        errors.push(err('faqs', 'faqs debe ser un arreglo JSON'));
+      } else {
+        const sanitized = sanitizeJsonValue(data.faqs);
+        if (!sanitized.safe) {
+          errors.push(err('faqs', sanitized.reason));
+        } else {
+          out.faqs = sanitized.value;
+        }
+      }
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
   },
 };
 
@@ -540,5 +658,7 @@ module.exports = {
   upsertSiteContentSchema,
   upsertContactSchema,
   upsertAboutUsSchema,
+  upsertFooterSchema,
+  upsertPromoBannerSchema,
   upsertHomeSchema,
 };

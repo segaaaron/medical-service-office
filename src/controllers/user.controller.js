@@ -71,7 +71,15 @@ async function updateUser(req, res, next) {
   try {
     const { email, name, password } = req.body;
     const data = {};
-    if (email) data.email = email;
+    if (!email && !name && !password) {
+      return res.status(400).json({ error: 'Al menos un campo debe ser proporcionado: email, nombre o contraseña' });
+    }
+    if (email) {
+      if (!EMAIL_RE.test(email)) {
+        return res.status(400).json({ error: 'El email debe ser una dirección válida' });
+      }
+      data.email = email;
+    }
     if (name) data.name = name;
     if (password) {
       if (!STRONG_PASSWORD_RE.test(password)) {
@@ -95,6 +103,9 @@ async function updateUser(req, res, next) {
 
 async function deleteUser(req, res, next) {
   try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propio usuario' });
+    }
     await prisma.user.delete({ where: { id: req.params.id } });
     logger.info({ event: 'user_deleted', userId: req.params.id, ip: req.ip, path: req.originalUrl }, 'User deleted');
     return res.status(204).send();

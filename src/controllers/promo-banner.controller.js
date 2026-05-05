@@ -14,26 +14,24 @@ async function getPromoBanner(req, res, next) {
 async function upsertPromoBanner(req, res, next) {
   try {
     const data = { ...req.body };
-    if (data.active !== undefined) data.active = data.active === 'true' || data.active === true;
+
+    const existing = await prisma.promoBanner.findFirst();
 
     if (req.imageUrl) {
-      const existing = await prisma.promoBanner.findFirst();
       if (existing?.imageUrl && existing.imageUrl !== req.imageUrl) {
         deleteUploadedFile(existing.imageUrl);
       }
       data.imageUrl = req.imageUrl;
     }
 
-    const existing = await prisma.promoBanner.findFirst();
-
     let banner;
     if (existing) {
       banner = await prisma.promoBanner.update({ where: { id: existing.id }, data });
+      return res.json(banner);
     } else {
       banner = await prisma.promoBanner.create({ data });
+      return res.status(201).json(banner);
     }
-
-    return res.json(banner);
   } catch (err) {
     next(err);
   }

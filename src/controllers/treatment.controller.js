@@ -5,6 +5,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 async function listTreatments(req, res, next) {
   try {
     const treatments = await prisma.treatment.findMany({
+      where: { active: true },
       orderBy: { createdAt: 'desc' },
     });
     return res.json(treatments);

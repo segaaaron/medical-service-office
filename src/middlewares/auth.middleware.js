@@ -17,12 +17,10 @@ async function authenticate(req, res, next) {
       select: { id: true, role: true },
     });
     if (!user) {
-      // Service tokens (e.g. nextjs-app) are valid JWTs but have no DB user — allow with null role
-      logger.warn({ event: 'auth_service_token', userId: payload.sub, ip: req.ip, path: req.originalUrl }, 'Token valid but no DB user found — treated as service token');
-      req.user = { id: payload.sub, role: null };
-    } else {
-      req.user = { id: user.id, role: user.role };
+      logger.warn({ event: 'auth_user_not_found', userId: payload.sub, ip: req.ip, path: req.originalUrl }, 'Token valid but user no longer exists in DB — rejected');
+      return res.status(401).json({ error: 'Invalid or expired access token' });
     }
+    req.user = { id: user.id, role: user.role };
     next();
   } catch {
     logger.warn({ event: 'auth_invalid_token', ip: req.ip, path: req.originalUrl }, 'Invalid or expired access token');

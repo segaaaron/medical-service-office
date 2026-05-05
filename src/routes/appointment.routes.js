@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
+const { requireRole } = require('../middlewares/requireRole.middleware');
 const {
   listAppointments,
   getAppointment,
@@ -21,7 +22,7 @@ router.post('/', appointmentRateLimit, validate(createAppointmentSchema), create
 // Protected — only authenticated admins can manage appointments
 router.get('/', authenticate, listAppointments);
 router.get('/:id', authenticate, getAppointment);
-router.put('/:id', authenticate, updateAppointment);
-router.delete('/:id', authenticate, deleteAppointment);
+router.put('/:id', authenticate, requireRole('ADMIN', 'RECEPTIONIST'), updateAppointment);
+router.delete('/:id', authenticate, requireRole('ADMIN', 'RECEPTIONIST'), deleteAppointment);
 
 module.exports = router;

@@ -5,6 +5,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 async function listPosts(req, res, next) {
   try {
     const posts = await prisma.blogPost.findMany({
+      where: { published: true },
       orderBy: { publishedAt: 'desc' },
       select: {
         id: true,
@@ -132,6 +133,9 @@ async function deletePost(req, res, next) {
 }
 
 async function uploadImage(req, res) {
+  if (!req.imageUrl) {
+    return res.status(400).json({ error: 'No se proporcionó ningún archivo de imagen' });
+  }
   return res.json({ imageUrl: req.imageUrl });
 }
 

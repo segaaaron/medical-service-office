@@ -12,10 +12,6 @@ const logger = require('../config/logger');
 async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'email and password are required' });
-    }
-
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       logger.warn({ event: 'login_user_not_found', email, ip: req.ip, path: req.originalUrl }, 'Login failed: user not found');
@@ -47,7 +43,7 @@ async function login(req, res, next) {
     return res.json({
       accessToken,
       refreshToken,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
     });
   } catch (err) {
     next(err);
@@ -77,8 +73,18 @@ async function refresh(req, res, next) {
     }
 
     const newAccessToken = generateAccessToken(payload.sub);
+    const newRefreshToken = generateRefreshToken(payload.sub);
+    const expiresAt = new Date(Date.now() + ms(JWT_REFRESH_EXPIRES_IN));
+
+    await prisma.$transaction([
+      prisma.refreshToken.delete({ where: { token: refreshToken } }),
+      prisma.refreshToken.create({
+        data: { token: newRefreshToken, userId: payload.sub, expiresAt },
+      }),
+    ]);
+
     logger.info({ event: 'token_refresh', userId: payload.sub, ip: req.ip, path: req.originalUrl }, 'Token refreshed');
-    return res.json({ accessToken: newAccessToken });
+    return res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
   } catch (err) {
     next(err);
   }

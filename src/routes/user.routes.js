@@ -16,7 +16,7 @@ router.use(authenticate);
 
 router.get('/me', getMe);
 router.get('/', requireRole('ADMIN', 'RECEPTIONIST'), listUsers);
-router.get('/:id', getUser);
+router.get('/:id', requireRole('ADMIN'), getUser);
 router.post('/', requireRole('ADMIN'), createUser);
 router.put('/:id', requireRole('ADMIN'), updateUser);
 router.delete('/:id', requireRole('ADMIN'), deleteUser);

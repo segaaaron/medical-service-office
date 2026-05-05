@@ -19,11 +19,11 @@ async function upsertHome(req, res, next) {
     let home;
     if (existing) {
       home = await prisma.home.update({ where: { id: existing.id }, data });
+      return res.json(home);
     } else {
       home = await prisma.home.create({ data });
+      return res.status(201).json(home);
     }
-
-    return res.json(home);
   } catch (err) {
     next(err);
   }

@@ -10,12 +10,5 @@ else
   echo "WARNING: prisma migrate deploy failed or had warnings. Continuing..."
 fi
 
-echo "Running seed..."
-if node prisma/seed.js; then
-  echo "Seed completed successfully."
-else
-  echo "WARNING: seed failed. Continuing..."
-fi
-
 echo "Starting server..."
 exec node server.js
