@@ -51,3 +51,6 @@ coverage/
 .dockerignore
 # Si usas docker-compose y generas archivos de datos locales
 docker-data/
+
+# --- Claude Code ---
+.claude/
