@@ -7,9 +7,4 @@ services:
       - "${PORT:-3000}:3000"
     env_file:
       - .env
-    volumes:
-      - uploads_data:/app/uploads
     restart: unless-stopped
-
-volumes:
-  uploads_data:

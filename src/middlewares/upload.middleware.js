@@ -2,6 +2,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { UPLOAD_MAX_SIZE_MB, WEBP_QUALITY } = require('../config/env');
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
@@ -34,7 +35,8 @@ async function compressAndSave(req, res, next) {
   if (!req.file) return next();
 
   try {
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
+    const hash = crypto.createHash('sha256').update(req.file.buffer).digest('hex').slice(0, 16);
+    const filename = `${Date.now()}-${hash}.webp`;
     const dest = path.join(UPLOAD_DIR, filename);
 
     await sharp(req.file.buffer)

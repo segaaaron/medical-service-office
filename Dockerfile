@@ -21,9 +21,7 @@ COPY --from=deps /app/prisma ./prisma
 # Copy application source
 COPY . .
 
-# Persistent volume for uploaded images
 RUN mkdir -p /app/uploads
-VOLUME ["/app/uploads"]
 
 EXPOSE 3000
 

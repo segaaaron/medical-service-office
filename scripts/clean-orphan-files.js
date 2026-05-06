@@ -56,6 +56,20 @@ async function getReferencedFilenames() {
     if (f) referenced.add(f);
   }
 
+  // PromoBanner
+  const banners = await prisma.promoBanner.findMany({ select: { imageUrl: true } });
+  for (const b of banners) {
+    const f = extractFilename(b.imageUrl);
+    if (f) referenced.add(f);
+  }
+
+  // AboutUs
+  const abouts = await prisma.aboutUs.findMany({ select: { imageUrl: true } });
+  for (const a of abouts) {
+    const f = extractFilename(a.imageUrl);
+    if (f) referenced.add(f);
+  }
+
   return referenced;
 }
 
