@@ -1,50 +1,4 @@
 const prisma = require('../services/prisma.service');
-const { parsePagination } = require('../utils/pagination');
-
-const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
-
-async function listAppointments(req, res, next) {
-  try {
-    const { status } = req.query;
-    const { page, limit, skip } = parsePagination(req.query);
-
-    const where = {};
-    if (status) {
-      if (!VALID_STATUSES.includes(status)) {
-        return res.status(400).json({ error: `El estado debe ser uno de: ${VALID_STATUSES.join(', ')}` });
-      }
-      where.status = status;
-    }
-
-    const [appointments, total] = await Promise.all([
-      prisma.appointment.findMany({
-        where,
-        include: { treatment: { select: { id: true, name: true, tag: true } } },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.appointment.count({ where }),
-    ]);
-
-    return res.json({ data: appointments, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function getAppointment(req, res, next) {
-  try {
-    const appointment = await prisma.appointment.findUnique({
-      where: { id: req.params.id },
-      include: { treatment: { select: { id: true, name: true, tag: true } } },
-    });
-    if (!appointment) return res.status(404).json({ error: 'Cita no encontrada' });
-    return res.json(appointment);
-  } catch (err) {
-    next(err);
-  }
-}
 
 async function createAppointment(req, res, next) {
   try {
@@ -113,4 +67,4 @@ async function deleteAppointment(req, res, next) {
   }
 }
 
-module.exports = { listAppointments, getAppointment, createAppointment, updateAppointment, deleteAppointment };
+module.exports = { createAppointment, updateAppointment, deleteAppointment };

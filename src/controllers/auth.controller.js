@@ -10,16 +10,19 @@ const {
 const { JWT_REFRESH_EXPIRES_IN } = require('../config/env');
 const logger = require('../config/logger');
 
+const DUMMY_HASH = '$2b$12$invalidhashfortimingXXXXXXXXXXXXXXXXXXXXXXXXXX';
+
 async function login(req, res, next) {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
+    const hashToCompare = user ? user.password : DUMMY_HASH;
+    const valid = await bcrypt.compare(password, hashToCompare);
+
     if (!user) {
-      logger.warn({ event: 'login_user_not_found', email, ip: req.ip, path: req.originalUrl }, 'Login failed: user not found');
+      logger.warn({ event: 'login_user_not_found', ip: req.ip, path: req.originalUrl }, 'Login failed: user not found');
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
-
-    const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       logger.warn({ event: 'login_wrong_password', userId: user.id, ip: req.ip, path: req.originalUrl }, 'Login failed: wrong password');
       return res.status(401).json({ error: 'Credenciales inválidas' });

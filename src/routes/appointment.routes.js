@@ -3,8 +3,6 @@ const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
 const {
-  listAppointments,
-  getAppointment,
   createAppointment,
   updateAppointment,
   deleteAppointment,
@@ -24,8 +22,6 @@ const appointmentRateLimit = rateLimit({
 
 const router = Router();
 
-router.get('/', listAppointments);
-router.get('/:id', getAppointment);
 router.post('/', appointmentRateLimit, validate(createAppointmentSchema), createAppointment);
 router.put('/:id', authenticate, requireRole('ADMIN'), validate(updateAppointmentSchema), updateAppointment);
 router.delete('/:id', authenticate, requireRole('ADMIN'), deleteAppointment);
