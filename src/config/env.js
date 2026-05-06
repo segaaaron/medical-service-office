@@ -35,4 +35,6 @@ module.exports = {
   APPOINTMENT_RATE_LIMIT_WINDOW_MS: parseInt(process.env.APPOINTMENT_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000,
   PAGINATION_DEFAULT_LIMIT: parseInt(process.env.PAGINATION_DEFAULT_LIMIT) || 20,
   PAGINATION_MAX_LIMIT: parseInt(process.env.PAGINATION_MAX_LIMIT) || 100,
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173',
 };

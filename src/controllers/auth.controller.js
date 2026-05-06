@@ -5,6 +5,7 @@ const {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
+  hashToken,
 } = require('../services/auth.service');
 const { JWT_REFRESH_EXPIRES_IN } = require('../config/env');
 const logger = require('../config/logger');
@@ -28,10 +29,10 @@ async function login(req, res, next) {
     const refreshToken = generateRefreshToken(user.id);
 
     const expiresAt = new Date(Date.now() + ms(JWT_REFRESH_EXPIRES_IN));
-    // Persist new token and clean up expired tokens for this user in one go
+    // Store hashed token — raw token never touches DB
     await prisma.$transaction([
       prisma.refreshToken.create({
-        data: { token: refreshToken, userId: user.id, expiresAt },
+        data: { token: hashToken(refreshToken), userId: user.id, expiresAt },
       }),
       prisma.refreshToken.deleteMany({
         where: { userId: user.id, expiresAt: { lt: new Date() } },
@@ -65,7 +66,7 @@ async function refresh(req, res, next) {
     }
 
     const stored = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+      where: { token: hashToken(refreshToken) },
     });
 
     if (!stored || stored.expiresAt < new Date()) {
@@ -77,9 +78,9 @@ async function refresh(req, res, next) {
     const expiresAt = new Date(Date.now() + ms(JWT_REFRESH_EXPIRES_IN));
 
     await prisma.$transaction([
-      prisma.refreshToken.delete({ where: { token: refreshToken } }),
+      prisma.refreshToken.delete({ where: { token: hashToken(refreshToken) } }),
       prisma.refreshToken.create({
-        data: { token: newRefreshToken, userId: payload.sub, expiresAt },
+        data: { token: hashToken(newRefreshToken), userId: payload.sub, expiresAt },
       }),
     ]);
 
@@ -97,7 +98,7 @@ async function logout(req, res, next) {
       return res.status(400).json({ error: 'El refreshToken es requerido' });
     }
 
-    await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+    await prisma.refreshToken.deleteMany({ where: { token: hashToken(refreshToken), userId: req.user.id } });
     logger.info({ event: 'logout', ip: req.ip, path: req.originalUrl }, 'User logged out');
     return res.status(204).send();
   } catch (err) {

@@ -1,6 +1,8 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
+const { validate } = require('../middlewares/validate.middleware');
+const { createUserSchema, updateUserSchema } = require('../schemas/index');
 const {
   getMe,
   listUsers,
@@ -12,13 +14,11 @@ const {
 
 const router = Router();
 
-router.use(authenticate);
-
-router.get('/me', getMe);
-router.get('/', requireRole('ADMIN'), listUsers);
-router.get('/:id', requireRole('ADMIN'), getUser);
-router.post('/', requireRole('ADMIN'), createUser);
-router.put('/:id', requireRole('ADMIN'), updateUser);
-router.delete('/:id', requireRole('ADMIN'), deleteUser);
+router.get('/me', authenticate, getMe);
+router.get('/', listUsers);
+router.get('/:id', getUser);
+router.post('/', authenticate, requireRole('ADMIN'), validate(createUserSchema), createUser);
+router.put('/:id', authenticate, requireRole('ADMIN'), validate(updateUserSchema), updateUser);
+router.delete('/:id', authenticate, requireRole('ADMIN'), deleteUser);
 
 module.exports = router;

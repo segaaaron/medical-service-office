@@ -68,13 +68,13 @@ const loginSchema = {
     const out = {};
 
     if (!isString(data.email) || !EMAIL_RE.test(data.email)) {
-      errors.push(err('email', 'Must be a valid email address'));
+      errors.push(err('email', 'Ingresa un correo electrónico válido'));
     } else {
       out.email = data.email.trim().toLowerCase();
     }
 
     if (!isString(data.password) || data.password.length < 1) {
-      errors.push(err('password', 'Password is required'));
+      errors.push(err('password', 'La contraseña es requerida'));
     } else {
       out.password = data.password;
     }
@@ -92,21 +92,21 @@ const createTreatmentSchema = {
     const out = {};
 
     if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 200) {
-      errors.push(err('name', 'Name must be between 1 and 200 characters'));
+      errors.push(err('name', 'El nombre del tratamiento es requerido (máximo 200 caracteres)'));
     } else {
       out.name = data.name.trim();
     }
 
     if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
       if (!isString(data.tag)) {
-        errors.push(err('tag', 'Tag must be a string'));
+        errors.push(err('tag', 'La etiqueta debe ser texto'));
       } else {
         out.tag = data.tag.trim();
       }
     }
 
     if (!isString(data.description) || data.description.trim().length < 1) {
-      errors.push(err('description', 'Description is required'));
+      errors.push(err('description', 'La descripción del tratamiento es requerida'));
     } else {
       out.description = data.description;
     }
@@ -114,7 +114,7 @@ const createTreatmentSchema = {
     if (data.price !== undefined && data.price !== null && data.price !== '') {
       const parsed = parseFloat(data.price);
       if (Number.isNaN(parsed) || parsed < 0) {
-        errors.push(err('price', 'Price must be a non-negative number'));
+        errors.push(err('price', 'El precio debe ser un número mayor o igual a cero'));
       } else {
         out.price = parsed;
       }
@@ -154,7 +154,7 @@ const updateTreatmentSchema = {
 
     if (data.name !== undefined && data.name !== null) {
       if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 200) {
-        errors.push(err('name', 'Name must be between 1 and 200 characters'));
+        errors.push(err('name', 'El nombre debe tener entre 1 y 200 caracteres'));
       } else {
         out.name = data.name.trim();
       }
@@ -162,7 +162,7 @@ const updateTreatmentSchema = {
 
     if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
       if (!isString(data.tag)) {
-        errors.push(err('tag', 'Tag must be a string'));
+        errors.push(err('tag', 'La etiqueta debe ser texto'));
       } else {
         out.tag = data.tag.trim();
       }
@@ -172,7 +172,7 @@ const updateTreatmentSchema = {
 
     if (data.description !== undefined && data.description !== null) {
       if (!isString(data.description)) {
-        errors.push(err('description', 'Description must be a string'));
+        errors.push(err('description', 'La descripción debe ser texto'));
       } else {
         out.description = data.description;
       }
@@ -184,7 +184,7 @@ const updateTreatmentSchema = {
       } else {
         const parsed = parseFloat(data.price);
         if (Number.isNaN(parsed) || parsed < 0) {
-          errors.push(err('price', 'Price must be a non-negative number'));
+          errors.push(err('price', 'El precio debe ser un número mayor o igual a cero'));
         } else {
           out.price = parsed;
         }
@@ -205,12 +205,12 @@ const updateTreatmentSchema = {
       } else if (data.active === false || data.active === 'false') {
         out.active = false;
       } else {
-        errors.push(err('active', 'Active must be a boolean'));
+        errors.push(err('active', 'El estado debe ser verdadero o falso'));
       }
     }
 
     if (Object.keys(out).length === 0 && errors.length === 0) {
-      errors.push(err('body', 'At least one field must be provided for update'));
+      errors.push(err('body', 'Debes enviar al menos un campo para actualizar'));
     }
 
     return errors.length ? { success: false, errors } : { success: true, data: out };
@@ -226,20 +226,20 @@ const createBlogPostSchema = {
     const out = {};
 
     if (!isString(data.title) || data.title.trim().length < 1 || data.title.trim().length > 300) {
-      errors.push(err('title', 'Title must be between 1 and 300 characters'));
+      errors.push(err('title', 'El título es requerido (máximo 300 caracteres)'));
     } else {
       out.title = data.title.trim();
     }
 
     if (!isString(data.content) || data.content.trim().length < 1) {
-      errors.push(err('content', 'Content is required'));
+      errors.push(err('content', 'El contenido de la publicación es requerido'));
     } else {
       out.content = data.content;
     }
 
     if (data.excerpt !== undefined && data.excerpt !== null) {
       if (!isString(data.excerpt)) {
-        errors.push(err('excerpt', 'Excerpt must be a string'));
+        errors.push(err('excerpt', 'El resumen debe ser texto'));
       } else {
         out.excerpt = data.excerpt;
       }
@@ -261,7 +261,7 @@ const createBlogPostSchema = {
       } else if (data.published === false || data.published === 'false') {
         out.published = false;
       } else {
-        errors.push(err('published', 'Published must be a boolean'));
+        errors.push(err('published', 'El campo publicado debe ser verdadero o falso'));
       }
     }
 
@@ -278,20 +278,20 @@ const createAppointmentSchema = {
     const out = {};
 
     if (!isString(data.patientName) || data.patientName.trim().length < 2 || data.patientName.trim().length > 100) {
-      errors.push(err('patientName', 'Patient name must be between 2 and 100 characters'));
+      errors.push(err('patientName', 'El nombre del paciente debe tener entre 2 y 100 caracteres'));
     } else {
       out.patientName = data.patientName.trim();
     }
 
     if (!isString(data.patientPhone) || data.patientPhone.trim().length < 6 || data.patientPhone.trim().length > 20) {
-      errors.push(err('patientPhone', 'Patient phone must be between 6 and 20 characters'));
+      errors.push(err('patientPhone', 'El teléfono debe tener entre 6 y 20 caracteres'));
     } else {
       out.patientPhone = data.patientPhone.trim();
     }
 
     if (data.patientEmail !== undefined && data.patientEmail !== null && data.patientEmail !== '') {
       if (!isString(data.patientEmail) || !EMAIL_RE.test(data.patientEmail)) {
-        errors.push(err('patientEmail', 'Patient email must be a valid email address or empty'));
+        errors.push(err('patientEmail', 'Ingresa un correo electrónico válido o déjalo vacío'));
       } else {
         out.patientEmail = data.patientEmail.trim().toLowerCase();
       }
@@ -308,7 +308,7 @@ const createAppointmentSchema = {
 
     if (data.notes !== undefined && data.notes !== null) {
       if (!isString(data.notes) || data.notes.length > 500) {
-        errors.push(err('notes', 'Notes must be a string of at most 500 characters'));
+        errors.push(err('notes', 'Las notas no pueden superar 500 caracteres'));
       } else {
         out.notes = data.notes;
       }
@@ -316,7 +316,7 @@ const createAppointmentSchema = {
 
     if (data.scheduledAt !== undefined && data.scheduledAt !== null && data.scheduledAt !== '') {
       if (!isString(data.scheduledAt) || !DATETIME_RE.test(data.scheduledAt)) {
-        errors.push(err('scheduledAt', 'scheduledAt must be an ISO 8601 datetime string or empty'));
+        errors.push(err('scheduledAt', 'La fecha y hora debe tener formato ISO 8601 (ej: 2026-01-15T10:30:00Z)'));
       } else {
         out.scheduledAt = data.scheduledAt;
       }
@@ -337,15 +337,15 @@ const upsertSiteContentSchema = {
     const out = {};
 
     if (!isString(data.key) || data.key.trim().length < 1 || data.key.trim().length > 100) {
-      errors.push(err('key', 'Key must be a string between 1 and 100 characters'));
+      errors.push(err('key', 'La clave del contenido es requerida (máximo 100 caracteres)'));
     } else {
       out.key = data.key.trim();
     }
 
     if (data.value === undefined || data.value === null) {
-      errors.push(err('value', 'Value is required and must be a valid JSON object'));
+      errors.push(err('value', 'El contenido es requerido y debe ser un objeto JSON válido'));
     } else if (typeof data.value !== 'object') {
-      errors.push(err('value', 'Value must be a JSON object'));
+      errors.push(err('value', 'El contenido debe ser un objeto JSON'));
     } else {
       const sanitized = sanitizeJsonValue(data.value);
       if (!sanitized.safe) {
@@ -369,7 +369,7 @@ const updateBlogPostSchema = {
 
     if (data.title !== undefined && data.title !== null) {
       if (!isString(data.title) || data.title.trim().length < 1 || data.title.trim().length > 300) {
-        errors.push(err('title', 'Title must be between 1 and 300 characters'));
+        errors.push(err('title', 'El título debe tener entre 1 y 300 caracteres'));
       } else {
         out.title = data.title.trim();
       }
@@ -377,7 +377,7 @@ const updateBlogPostSchema = {
 
     if (data.content !== undefined && data.content !== null) {
       if (!isString(data.content) || data.content.trim().length < 1) {
-        errors.push(err('content', 'Content must be a non-empty string'));
+        errors.push(err('content', 'El contenido no puede estar vacío'));
       } else {
         out.content = data.content;
       }
@@ -385,7 +385,7 @@ const updateBlogPostSchema = {
 
     if (data.excerpt !== undefined && data.excerpt !== null) {
       if (!isString(data.excerpt)) {
-        errors.push(err('excerpt', 'Excerpt must be a string'));
+        errors.push(err('excerpt', 'El resumen debe ser texto'));
       } else {
         out.excerpt = data.excerpt;
       }
@@ -405,12 +405,12 @@ const updateBlogPostSchema = {
       } else if (data.published === false || data.published === 'false') {
         out.published = false;
       } else {
-        errors.push(err('published', 'Published must be a boolean'));
+        errors.push(err('published', 'El campo publicado debe ser verdadero o falso'));
       }
     }
 
     if (Object.keys(out).length === 0 && errors.length === 0) {
-      errors.push(err('body', 'At least one field must be provided for update'));
+      errors.push(err('body', 'Debes enviar al menos un campo para actualizar'));
     }
 
     return errors.length ? { success: false, errors } : { success: true, data: out };
@@ -426,67 +426,67 @@ const upsertContactSchema = {
     const out = {};
 
     if (!isString(data.whatsappNumber) || data.whatsappNumber.trim().length < 1) {
-      errors.push(err('whatsappNumber', 'WhatsApp number is required'));
+      errors.push(err('whatsappNumber', 'El número de WhatsApp es requerido'));
     } else {
       out.whatsappNumber = data.whatsappNumber.trim();
     }
 
     if (!isString(data.whatsappUrl) || !URL_RE.test(data.whatsappUrl.trim())) {
-      errors.push(err('whatsappUrl', 'WhatsApp URL debe ser una URL válida'));
+      errors.push(err('whatsappUrl', 'El enlace de WhatsApp debe ser una URL válida'));
     } else {
       out.whatsappUrl = data.whatsappUrl.trim();
     }
 
     if (!isString(data.phone) || data.phone.trim().length < 1) {
-      errors.push(err('phone', 'Phone number is required'));
+      errors.push(err('phone', 'El número de teléfono es requerido'));
     } else {
       out.phone = data.phone.trim();
     }
 
     if (!isString(data.instagramUsername) || data.instagramUsername.trim().length < 1) {
-      errors.push(err('instagramUsername', 'Instagram username is required'));
+      errors.push(err('instagramUsername', 'El usuario de Instagram es requerido'));
     } else {
       out.instagramUsername = data.instagramUsername.trim();
     }
 
     if (!isString(data.instagramUrl) || !URL_RE.test(data.instagramUrl.trim())) {
-      errors.push(err('instagramUrl', 'Instagram URL debe ser una URL válida'));
+      errors.push(err('instagramUrl', 'El enlace de Instagram debe ser una URL válida'));
     } else {
       out.instagramUrl = data.instagramUrl.trim();
     }
 
     if (!isString(data.facebookName) || data.facebookName.trim().length < 1) {
-      errors.push(err('facebookName', 'Facebook page name is required'));
+      errors.push(err('facebookName', 'El nombre de la página de Facebook es requerido'));
     } else {
       out.facebookName = data.facebookName.trim();
     }
 
     if (!isString(data.facebookUrl) || !URL_RE.test(data.facebookUrl.trim())) {
-      errors.push(err('facebookUrl', 'Facebook URL debe ser una URL válida'));
+      errors.push(err('facebookUrl', 'El enlace de Facebook debe ser una URL válida'));
     } else {
       out.facebookUrl = data.facebookUrl.trim();
     }
 
     if (!isString(data.mondayFridayHours) || data.mondayFridayHours.trim().length < 1) {
-      errors.push(err('mondayFridayHours', 'Monday–Friday hours are required'));
+      errors.push(err('mondayFridayHours', 'El horario de lunes a viernes es requerido'));
     } else {
       out.mondayFridayHours = data.mondayFridayHours.trim();
     }
 
     if (!isString(data.saturdayHours) || data.saturdayHours.trim().length < 1) {
-      errors.push(err('saturdayHours', 'Saturday hours are required'));
+      errors.push(err('saturdayHours', 'El horario del sábado es requerido'));
     } else {
       out.saturdayHours = data.saturdayHours.trim();
     }
 
     if (!isString(data.sundayStatus) || data.sundayStatus.trim().length < 1) {
-      errors.push(err('sundayStatus', 'Sunday status is required'));
+      errors.push(err('sundayStatus', 'El estado del domingo es requerido'));
     } else {
       out.sundayStatus = data.sundayStatus.trim();
     }
 
     if (!isString(data.locationDescription) || data.locationDescription.trim().length < 1) {
-      errors.push(err('locationDescription', 'Location description is required'));
+      errors.push(err('locationDescription', 'La descripción de la ubicación es requerida'));
     } else {
       out.locationDescription = data.locationDescription.trim();
     }
@@ -501,7 +501,6 @@ const upsertContactSchema = {
 const ABOUT_US_STRING_FIELDS = [
   'sectionLabel', 'doctorName',
   'descriptionDoc',
-  'imageUrl',
   'experienceBadgeValue', 'experienceBadgeLabel',
   'stat1Value', 'stat1Label',
   'stat2Value', 'stat2Label',
@@ -521,10 +520,18 @@ const upsertAboutUsSchema = {
     for (const field of ABOUT_US_STRING_FIELDS) {
       if (data[field] !== undefined && data[field] !== null) {
         if (!isString(data[field])) {
-          errors.push(err(field, `${field} must be a string`));
+          errors.push(err(field, `El campo ${field} debe ser texto`));
         } else {
           out[field] = data[field];
         }
+      }
+    }
+
+    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
+      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+        errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
+      } else {
+        out.imageUrl = data.imageUrl;
       }
     }
 
@@ -590,7 +597,7 @@ const upsertFooterSchema = {
 const PROMO_BANNER_STRING_FIELDS = [
   'tag', 'title', 'highlightedText', 'description',
   'doctorName', 'location', 'whatsappText', 'whatsappUrl',
-  'dismissText', 'imageUrl',
+  'dismissText',
 ];
 
 const upsertPromoBannerSchema = {
@@ -605,6 +612,14 @@ const upsertPromoBannerSchema = {
         } else {
           out[field] = data[field];
         }
+      }
+    }
+
+    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
+      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+        errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
+      } else {
+        out.imageUrl = data.imageUrl;
       }
     }
 
@@ -667,6 +682,154 @@ const upsertHomeSchema = {
 };
 
 // ---------------------------------------------------------------------------
+// createUserSchema / updateUserSchema
+// ---------------------------------------------------------------------------
+const STRONG_PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+
+const createUserSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (!isString(data.email) || !EMAIL_RE.test(data.email)) {
+      errors.push(err('email', 'Debe ser un email válido'));
+    } else {
+      out.email = data.email.trim().toLowerCase();
+    }
+
+    if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 100) {
+      errors.push(err('name', 'El nombre es requerido (máx 100 caracteres)'));
+    } else {
+      out.name = data.name.trim();
+    }
+
+    if (!isString(data.password) || !STRONG_PASSWORD_RE.test(data.password)) {
+      errors.push(err('password', 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial'));
+    } else {
+      out.password = data.password;
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
+const updateUserSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (data.email !== undefined) {
+      if (!isString(data.email) || !EMAIL_RE.test(data.email)) {
+        errors.push(err('email', 'Debe ser un email válido'));
+      } else {
+        out.email = data.email.trim().toLowerCase();
+      }
+    }
+
+    if (data.name !== undefined) {
+      if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 100) {
+        errors.push(err('name', 'El nombre debe tener entre 1 y 100 caracteres'));
+      } else {
+        out.name = data.name.trim();
+      }
+    }
+
+    if (data.password !== undefined) {
+      if (!isString(data.password) || !STRONG_PASSWORD_RE.test(data.password)) {
+        errors.push(err('password', 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial'));
+      } else {
+        out.password = data.password;
+      }
+    }
+
+    if (Object.keys(out).length === 0 && errors.length === 0) {
+      errors.push(err('body', 'Al menos un campo debe ser proporcionado: email, nombre o contraseña'));
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// updateAppointmentSchema — all fields optional for partial updates
+// ---------------------------------------------------------------------------
+const VALID_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const updateAppointmentSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (data.patientName !== undefined) {
+      if (!isString(data.patientName) || data.patientName.trim().length < 2 || data.patientName.trim().length > 100) {
+        errors.push(err('patientName', 'El nombre debe tener entre 2 y 100 caracteres'));
+      } else {
+        out.patientName = data.patientName.trim();
+      }
+    }
+
+    if (data.patientPhone !== undefined) {
+      if (!isString(data.patientPhone) || data.patientPhone.trim().length < 6 || data.patientPhone.trim().length > 20) {
+        errors.push(err('patientPhone', 'El teléfono debe tener entre 6 y 20 caracteres'));
+      } else {
+        out.patientPhone = data.patientPhone.trim();
+      }
+    }
+
+    if (data.patientEmail !== undefined && data.patientEmail !== null && data.patientEmail !== '') {
+      if (!isString(data.patientEmail) || !EMAIL_RE.test(data.patientEmail)) {
+        errors.push(err('patientEmail', 'Debe ser un email válido'));
+      } else {
+        out.patientEmail = data.patientEmail.trim().toLowerCase();
+      }
+    } else if (data.patientEmail !== undefined) {
+      out.patientEmail = '';
+    }
+
+    if (data.treatmentId !== undefined) {
+      if (!isString(data.treatmentId) || !UUID_RE.test(data.treatmentId.trim())) {
+        errors.push(err('treatmentId', 'treatmentId debe ser un UUID válido'));
+      } else {
+        out.treatmentId = data.treatmentId.trim();
+      }
+    }
+
+    if (data.notes !== undefined && data.notes !== null) {
+      if (!isString(data.notes) || data.notes.length > 500) {
+        errors.push(err('notes', 'Las notas deben ser texto de máximo 500 caracteres'));
+      } else {
+        out.notes = data.notes;
+      }
+    }
+
+    if (data.scheduledAt !== undefined && data.scheduledAt !== null && data.scheduledAt !== '') {
+      if (!isString(data.scheduledAt) || !DATETIME_RE.test(data.scheduledAt)) {
+        errors.push(err('scheduledAt', 'scheduledAt debe ser una fecha ISO 8601'));
+      } else {
+        out.scheduledAt = data.scheduledAt;
+      }
+    } else if (data.scheduledAt !== undefined) {
+      out.scheduledAt = null;
+    }
+
+    if (data.status !== undefined) {
+      if (!VALID_APPOINTMENT_STATUSES.includes(data.status)) {
+        errors.push(err('status', `El estado debe ser uno de: ${VALID_APPOINTMENT_STATUSES.join(', ')}`));
+      } else {
+        out.status = data.status;
+      }
+    }
+
+    if (Object.keys(out).length === 0 && errors.length === 0) {
+      errors.push(err('body', 'Al menos un campo debe ser proporcionado para actualizar'));
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
+// ---------------------------------------------------------------------------
 // refreshTokenSchema
 // ---------------------------------------------------------------------------
 const refreshTokenSchema = {
@@ -685,11 +848,14 @@ const refreshTokenSchema = {
 module.exports = {
   loginSchema,
   refreshTokenSchema,
+  createUserSchema,
+  updateUserSchema,
   createTreatmentSchema,
   updateTreatmentSchema,
   createBlogPostSchema,
   updateBlogPostSchema,
   createAppointmentSchema,
+  updateAppointmentSchema,
   upsertSiteContentSchema,
   upsertContactSchema,
   upsertAboutUsSchema,

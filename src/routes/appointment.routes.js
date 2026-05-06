@@ -10,7 +10,7 @@ const {
   deleteAppointment,
 } = require('../controllers/appointment.controller');
 const { validate } = require('../middlewares/validate.middleware');
-const { createAppointmentSchema } = require('../schemas/index');
+const { createAppointmentSchema, updateAppointmentSchema } = require('../schemas/index');
 
 const { APPOINTMENT_RATE_LIMIT_MAX, APPOINTMENT_RATE_LIMIT_WINDOW_MS } = require('../config/env');
 
@@ -24,13 +24,10 @@ const appointmentRateLimit = rateLimit({
 
 const router = Router();
 
-// Public — patients can create an appointment request
+router.get('/', listAppointments);
+router.get('/:id', getAppointment);
 router.post('/', appointmentRateLimit, validate(createAppointmentSchema), createAppointment);
-
-// Protected — only authenticated admins can manage appointments
-router.get('/', authenticate, requireRole('ADMIN'), listAppointments);
-router.get('/:id', authenticate, requireRole('ADMIN'), getAppointment);
-router.put('/:id', authenticate, requireRole('ADMIN'), updateAppointment);
+router.put('/:id', authenticate, requireRole('ADMIN'), validate(updateAppointmentSchema), updateAppointment);
 router.delete('/:id', authenticate, requireRole('ADMIN'), deleteAppointment);
 
 module.exports = router;

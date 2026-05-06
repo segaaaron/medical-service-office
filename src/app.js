@@ -5,7 +5,8 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
-const { BODY_LIMIT, PUBLIC_RATE_LIMIT_MAX, PUBLIC_RATE_LIMIT_WINDOW_MS } = require('./config/env');
+const prisma = require('./services/prisma.service');
+const { BODY_LIMIT, PUBLIC_RATE_LIMIT_MAX, PUBLIC_RATE_LIMIT_WINDOW_MS, ALLOWED_ORIGINS } = require('./config/env');
 
 const app = express();
 
@@ -40,10 +41,7 @@ const corsOptions = isProduction
     }
   : {
       origin: (origin, callback) => {
-        const devOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173')
-          .split(',')
-          .map((o) => o.trim())
-          .filter(Boolean);
+        const devOrigins = ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
         if (!origin || devOrigins.includes(origin)) {
           callback(null, true);
         } else {
@@ -70,7 +68,7 @@ const publicGetLimiter = rateLimit({
   max: PUBLIC_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
+  message: { error: 'Demasiadas solicitudes. Por favor intenta de nuevo más tarde.' },
 });
 // Apply to all public GET endpoints
 app.use('/api/treatments', publicGetLimiter);
@@ -83,8 +81,13 @@ app.use('/api/promo-banner', publicGetLimiter);
 app.use('/api/site-content', publicGetLimiter);
 
 // ── Health check ─────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  } catch {
+    res.status(503).json({ status: 'error', timestamp: new Date().toISOString() });
+  }
 });
 
 // ── API routes ───────────────────────────────────────────────────────────────

@@ -33,7 +33,7 @@ function createRateLimit(maxRequests, windowMs) {
       const retryAfterSec = Math.ceil((record.resetAt - now) / 1000);
       res.set('Retry-After', String(retryAfterSec));
       return res.status(429).json({
-        error: 'Too many requests, please try again later.',
+        error: 'Demasiadas solicitudes. Por favor intenta de nuevo más tarde.',
         retryAfter: retryAfterSec,
       });
     }

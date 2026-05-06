@@ -1,13 +1,11 @@
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
-const { PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
+const { parsePagination } = require('../utils/pagination');
 
 async function listPosts(req, res, next) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = parsePagination(req.query);
 
     const where = {};
 
@@ -65,6 +63,7 @@ async function createPost(req, res, next) {
         content,
         imageUrl: imageUrl || null,
         published: published ?? false,
+        publishedAt: published ? new Date() : null,
       },
     });
     return res.status(201).json(post);
@@ -105,6 +104,7 @@ async function updatePost(req, res, next) {
 
     if (published !== undefined) {
       data.published = published;
+      data.publishedAt = published ? new Date() : null;
     }
 
     const post = await prisma.blogPost.update({
@@ -115,9 +115,6 @@ async function updatePost(req, res, next) {
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Publicación no encontrada' });
     if (err.code === 'P2002') return res.status(409).json({ error: 'Ya existe una publicación con ese título' });
-    if (err.code === 'P2023' || err.name === 'PrismaClientValidationError') {
-      return res.status(400).json({ error: 'Formato de ID inválido' });
-    }
     next(err);
   }
 }

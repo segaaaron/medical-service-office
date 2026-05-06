@@ -1,10 +1,15 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const {
   JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET,
   JWT_ACCESS_EXPIRES_IN,
   JWT_REFRESH_EXPIRES_IN,
 } = require('../config/env');
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 function generateAccessToken(userId) {
   return jwt.sign({ sub: userId }, JWT_ACCESS_SECRET, {
@@ -33,4 +38,5 @@ module.exports = {
   generateRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
+  hashToken,
 };

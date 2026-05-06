@@ -21,7 +21,7 @@ function parseValueJson(req, res, next) {
     try {
       req.body.value = JSON.parse(req.body.value);
     } catch {
-      return res.status(400).json({ errors: [{ field: 'value', message: 'Value must be a valid JSON string' }] });
+      return res.status(400).json({ errors: [{ field: 'value', message: 'El valor debe ser un JSON válido' }] });
     }
   }
   next();

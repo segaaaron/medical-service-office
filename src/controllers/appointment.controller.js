@@ -1,14 +1,12 @@
 const prisma = require('../services/prisma.service');
-const { PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
+const { parsePagination } = require('../utils/pagination');
 
 const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
 
 async function listAppointments(req, res, next) {
   try {
     const { status } = req.query;
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = parsePagination(req.query);
 
     const where = {};
     if (status) {
@@ -82,15 +80,16 @@ async function updateAppointment(req, res, next) {
     if (patientName !== undefined) data.patientName = patientName;
     if (patientPhone !== undefined) data.patientPhone = patientPhone;
     if (patientEmail !== undefined) data.patientEmail = patientEmail;
-    if (treatmentId !== undefined) data.treatmentId = treatmentId;
+    if (treatmentId !== undefined) {
+      const treatment = await prisma.treatment.findUnique({ where: { id: treatmentId }, select: { id: true, active: true } });
+      if (!treatment || !treatment.active) {
+        return res.status(422).json({ error: 'El tratamiento seleccionado no está disponible' });
+      }
+      data.treatmentId = treatmentId;
+    }
     if (notes !== undefined) data.notes = notes;
     if (scheduledAt !== undefined) data.scheduledAt = scheduledAt ? new Date(scheduledAt) : null;
-    if (status !== undefined) {
-      if (!VALID_STATUSES.includes(status)) {
-        return res.status(400).json({ error: `El estado debe ser uno de:${VALID_STATUSES.join(', ')}` });
-      }
-      data.status = status;
-    }
+    if (status !== undefined) data.status = status;
 
     const appointment = await prisma.appointment.update({
       where: { id: req.params.id },

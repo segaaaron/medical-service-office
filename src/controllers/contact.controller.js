@@ -11,34 +11,40 @@ async function getContact(req, res, next) {
 }
 
 async function upsertContact(req, res, next) {
+  const {
+    whatsappNumber, whatsappUrl, phone,
+    instagramUsername, instagramUrl,
+    facebookName, facebookUrl,
+    mondayFridayHours, saturdayHours, sundayStatus,
+    locationDescription,
+  } = req.body;
+
+  const data = {
+    whatsappNumber, whatsappUrl, phone,
+    instagramUsername, instagramUrl,
+    facebookName, facebookUrl,
+    mondayFridayHours, saturdayHours, sundayStatus,
+    locationDescription,
+  };
+
   try {
-    const {
-      whatsappNumber, whatsappUrl, phone,
-      instagramUsername, instagramUrl,
-      facebookName, facebookUrl,
-      mondayFridayHours, saturdayHours, sundayStatus,
-      locationDescription,
-    } = req.body;
-
     const existing = await prisma.contact.findFirst();
-
-    const data = {
-      whatsappNumber, whatsappUrl, phone,
-      instagramUsername, instagramUrl,
-      facebookName, facebookUrl,
-      mondayFridayHours, saturdayHours, sundayStatus,
-      locationDescription,
-    };
-
-    let contact;
     if (existing) {
-      contact = await prisma.contact.update({ where: { id: existing.id }, data });
+      const contact = await prisma.contact.update({ where: { id: existing.id }, data });
       return res.json(contact);
-    } else {
-      contact = await prisma.contact.create({ data });
-      return res.status(201).json(contact);
     }
+    const contact = await prisma.contact.create({ data });
+    return res.status(201).json(contact);
   } catch (err) {
+    if (err.code === 'P2002') {
+      try {
+        const existing = await prisma.contact.findFirst();
+        if (existing) {
+          const contact = await prisma.contact.update({ where: { id: existing.id }, data });
+          return res.json(contact);
+        }
+      } catch (retryErr) { return next(retryErr); }
+    }
     next(err);
   }
 }

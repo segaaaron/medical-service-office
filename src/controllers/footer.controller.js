@@ -11,19 +11,26 @@ async function getFooter(req, res, next) {
 }
 
 async function upsertFooter(req, res, next) {
-  try {
-    const data = { ...req.body };
-    const existing = await prisma.footer.findFirst();
+  const data = { ...req.body };
 
-    let footer;
+  try {
+    const existing = await prisma.footer.findFirst();
     if (existing) {
-      footer = await prisma.footer.update({ where: { id: existing.id }, data });
+      const footer = await prisma.footer.update({ where: { id: existing.id }, data });
       return res.json(footer);
-    } else {
-      footer = await prisma.footer.create({ data });
-      return res.status(201).json(footer);
     }
+    const footer = await prisma.footer.create({ data });
+    return res.status(201).json(footer);
   } catch (err) {
+    if (err.code === 'P2002') {
+      try {
+        const existing = await prisma.footer.findFirst();
+        if (existing) {
+          const footer = await prisma.footer.update({ where: { id: existing.id }, data });
+          return res.json(footer);
+        }
+      } catch (retryErr) { return next(retryErr); }
+    }
     next(err);
   }
 }

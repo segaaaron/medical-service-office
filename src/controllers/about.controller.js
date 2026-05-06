@@ -12,9 +12,9 @@ async function getAboutUs(req, res, next) {
 }
 
 async function upsertAboutUs(req, res, next) {
-  try {
-    const data = { ...req.body };
+  const data = { ...req.body };
 
+  try {
     const existing = await prisma.aboutUs.findFirst();
 
     if (req.imageUrl) {
@@ -24,15 +24,22 @@ async function upsertAboutUs(req, res, next) {
       data.imageUrl = req.imageUrl;
     }
 
-    let aboutUs;
     if (existing) {
-      aboutUs = await prisma.aboutUs.update({ where: { id: existing.id }, data });
+      const aboutUs = await prisma.aboutUs.update({ where: { id: existing.id }, data });
       return res.json(aboutUs);
-    } else {
-      aboutUs = await prisma.aboutUs.create({ data });
-      return res.status(201).json(aboutUs);
     }
+    const aboutUs = await prisma.aboutUs.create({ data });
+    return res.status(201).json(aboutUs);
   } catch (err) {
+    if (err.code === 'P2002') {
+      try {
+        const existing = await prisma.aboutUs.findFirst();
+        if (existing) {
+          const aboutUs = await prisma.aboutUs.update({ where: { id: existing.id }, data });
+          return res.json(aboutUs);
+        }
+      } catch (retryErr) { return next(retryErr); }
+    }
     next(err);
   }
 }

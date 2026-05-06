@@ -1,6 +1,6 @@
 const prisma = require('../services/prisma.service');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
-const { PAGINATION_DEFAULT_LIMIT, PAGINATION_MAX_LIMIT } = require('../config/env');
+const { parsePagination } = require('../utils/pagination');
 
 const DEFAULT_KEY = 'main';
 
@@ -23,9 +23,7 @@ async function getSiteContent(req, res, next) {
 
 async function listSiteContent(req, res, next) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(PAGINATION_MAX_LIMIT, Math.max(1, parseInt(req.query.limit) || PAGINATION_DEFAULT_LIMIT));
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = parsePagination(req.query);
 
     const [records, total] = await Promise.all([
       prisma.siteContent.findMany({ orderBy: { updatedAt: 'desc' }, skip, take: limit }),
