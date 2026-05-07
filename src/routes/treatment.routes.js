@@ -8,6 +8,7 @@ const {
   createTreatment,
   updateTreatment,
   deleteTreatment,
+  reorderTreatments,
 } = require('../controllers/treatment.controller');
 const { validate } = require('../middlewares/validate.middleware');
 const { createTreatmentSchema, updateTreatmentSchema } = require('../schemas/index');
@@ -24,6 +25,7 @@ const router = Router();
 router.get('/', listTreatments);
 router.get('/:id', getTreatment);
 
+router.patch('/reorder', authenticate, requireRole('ADMIN'), reorderTreatments);
 router.post('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, cleanupOnError, validate(createTreatmentSchema), createTreatment);
 router.put('/:id', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, cleanupOnError, validate(updateTreatmentSchema), updateTreatment);
 router.delete('/:id', authenticate, requireRole('ADMIN'), deleteTreatment);

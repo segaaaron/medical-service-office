@@ -7,6 +7,7 @@ jest.mock('../../services/prisma.service', () => ({
     delete: jest.fn(),
     count: jest.fn(),
   },
+  $transaction: jest.fn(),
 }));
 jest.mock('../../middlewares/upload.middleware', () => ({
   deleteUploadedFile: jest.fn(),
@@ -15,7 +16,7 @@ jest.mock('../../middlewares/upload.middleware', () => ({
 const prisma = require('../../services/prisma.service');
 const { deleteUploadedFile } = require('../../middlewares/upload.middleware');
 const {
-  listTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment,
+  listTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment, reorderTreatments,
 } = require('../../controllers/treatment.controller');
 const { mockReq, mockRes, mockNext } = require('../helpers/mock-req-res');
 
@@ -111,6 +112,84 @@ describe('treatment.controller', () => {
       const res = mockRes();
       await updateTreatment(req, res, mockNext());
       expect(res.status).toHaveBeenCalledWith(409);
+    });
+  });
+
+  describe('reorderTreatments', () => {
+    const VALID_ITEMS = [
+      { id: 'tid-1', order: 0 },
+      { id: 'tid-2', order: 1 },
+    ];
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      prisma.treatment.update.mockResolvedValue({});
+      prisma.$transaction.mockImplementation((ops) => Promise.all(ops));
+    });
+
+    it('returns 400 when body is not an array', async () => {
+      const req = mockReq({ body: { id: 'tid-1', order: 0 } });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when body is empty array', async () => {
+      const req = mockReq({ body: [] });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when id is empty string', async () => {
+      const req = mockReq({ body: [{ id: '', order: 0 }] });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when order is a float', async () => {
+      const req = mockReq({ body: [{ id: 'tid-1', order: 1.5 }] });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when order is negative', async () => {
+      const req = mockReq({ body: [{ id: 'tid-1', order: -1 }] });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when order exceeds INT max', async () => {
+      const req = mockReq({ body: [{ id: 'tid-1', order: 2_147_483_648 }] });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 400 when body contains duplicate ids', async () => {
+      const req = mockReq({ body: [{ id: 'tid-1', order: 0 }, { id: 'tid-1', order: 1 }] });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 404 on P2025 from transaction', async () => {
+      prisma.$transaction.mockRejectedValue(Object.assign(new Error(), { code: 'P2025' }));
+      const req = mockReq({ body: VALID_ITEMS });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it('returns { ok: true } on success', async () => {
+      prisma.$transaction.mockResolvedValue([]);
+      const req = mockReq({ body: VALID_ITEMS });
+      const res = mockRes();
+      await reorderTreatments(req, res, mockNext());
+      expect(res.json).toHaveBeenCalledWith({ ok: true });
     });
   });
 

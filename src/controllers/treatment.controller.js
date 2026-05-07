@@ -12,7 +12,7 @@ async function listTreatments(req, res, next) {
     const [treatments, total] = await Promise.all([
       prisma.treatment.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
         skip,
         take: limit,
       }),
@@ -114,4 +114,39 @@ async function deleteTreatment(req, res, next) {
   }
 }
 
-module.exports = { listTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment };
+async function reorderTreatments(req, res, next) {
+  try {
+    const items = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'El body debe ser un array no vacío' });
+    }
+
+    for (const item of items) {
+      if (typeof item.id !== 'string' || item.id.trim().length === 0) {
+        return res.status(400).json({ error: 'Cada item debe tener un id de tipo string no vacío' });
+      }
+      if (!Number.isInteger(item.order) || item.order < 0 || item.order > 2_147_483_647) {
+        return res.status(400).json({ error: 'El campo order debe ser un entero entre 0 y 2147483647' });
+      }
+    }
+
+    const ids = items.map(i => i.id);
+    if (new Set(ids).size !== ids.length) {
+      return res.status(400).json({ error: 'El body contiene IDs duplicados' });
+    }
+
+    await prisma.$transaction(
+      items.map(({ id, order }) =>
+        prisma.treatment.update({ where: { id }, data: { order } })
+      )
+    );
+
+    return res.json({ ok: true });
+  } catch (err) {
+    if (err.code === 'P2025') return res.status(404).json({ error: 'Uno o más tratamientos no fueron encontrados' });
+    next(err);
+  }
+}
+
+module.exports = { listTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment, reorderTreatments };
