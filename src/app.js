@@ -2,11 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
-const rateLimit = require('express-rate-limit');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
 const prisma = require('./services/prisma.service');
-const { BODY_LIMIT, PUBLIC_RATE_LIMIT_MAX, PUBLIC_RATE_LIMIT_WINDOW_MS, ALLOWED_ORIGINS } = require('./config/env');
+const { BODY_LIMIT, ALLOWED_ORIGINS } = require('./config/env');
 
 const app = express();
 
@@ -62,23 +61,6 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: BODY_LIMIT }));
 
-// ── Public GET rate limiter ──────────────────────────────────────────────────
-const publicGetLimiter = rateLimit({
-  windowMs: PUBLIC_RATE_LIMIT_WINDOW_MS,
-  max: PUBLIC_RATE_LIMIT_MAX,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Demasiadas solicitudes. Por favor intenta de nuevo más tarde.' },
-});
-// Apply to all public GET endpoints
-app.use('/api/treatments', publicGetLimiter);
-app.use('/api/blog', publicGetLimiter);
-app.use('/api/contact', publicGetLimiter);
-app.use('/api/home', publicGetLimiter);
-app.use('/api/about', publicGetLimiter);
-app.use('/api/footer', publicGetLimiter);
-app.use('/api/promo-banner', publicGetLimiter);
-app.use('/api/site-content', publicGetLimiter);
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {

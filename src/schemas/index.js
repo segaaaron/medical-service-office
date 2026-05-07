@@ -269,64 +269,6 @@ const createBlogPostSchema = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// createAppointmentSchema
-// ---------------------------------------------------------------------------
-const createAppointmentSchema = {
-  validate(data) {
-    const errors = [];
-    const out = {};
-
-    if (!isString(data.patientName) || data.patientName.trim().length < 2 || data.patientName.trim().length > 100) {
-      errors.push(err('patientName', 'El nombre del paciente debe tener entre 2 y 100 caracteres'));
-    } else {
-      out.patientName = data.patientName.trim();
-    }
-
-    if (!isString(data.patientPhone) || data.patientPhone.trim().length < 6 || data.patientPhone.trim().length > 20) {
-      errors.push(err('patientPhone', 'El teléfono debe tener entre 6 y 20 caracteres'));
-    } else {
-      out.patientPhone = data.patientPhone.trim();
-    }
-
-    if (data.patientEmail !== undefined && data.patientEmail !== null && data.patientEmail !== '') {
-      if (!isString(data.patientEmail) || !EMAIL_RE.test(data.patientEmail)) {
-        errors.push(err('patientEmail', 'Ingresa un correo electrónico válido o déjalo vacío'));
-      } else {
-        out.patientEmail = data.patientEmail.trim().toLowerCase();
-      }
-    } else {
-      out.patientEmail = data.patientEmail ?? '';
-    }
-
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!isString(data.treatmentId) || !UUID_RE.test(data.treatmentId.trim())) {
-      errors.push(err('treatmentId', 'treatmentId debe ser un UUID válido'));
-    } else {
-      out.treatmentId = data.treatmentId.trim();
-    }
-
-    if (data.notes !== undefined && data.notes !== null) {
-      if (!isString(data.notes) || data.notes.length > 500) {
-        errors.push(err('notes', 'Las notas no pueden superar 500 caracteres'));
-      } else {
-        out.notes = data.notes;
-      }
-    }
-
-    if (data.scheduledAt !== undefined && data.scheduledAt !== null && data.scheduledAt !== '') {
-      if (!isString(data.scheduledAt) || !DATETIME_RE.test(data.scheduledAt)) {
-        errors.push(err('scheduledAt', 'La fecha y hora debe tener formato ISO 8601 (ej: 2026-01-15T10:30:00Z)'));
-      } else {
-        out.scheduledAt = data.scheduledAt;
-      }
-    } else {
-      out.scheduledAt = data.scheduledAt ?? '';
-    }
-
-    return errors.length ? { success: false, errors } : { success: true, data: out };
-  },
-};
 
 // ---------------------------------------------------------------------------
 // upsertSiteContentSchema
@@ -750,84 +692,6 @@ const updateUserSchema = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// updateAppointmentSchema — all fields optional for partial updates
-// ---------------------------------------------------------------------------
-const VALID_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const updateAppointmentSchema = {
-  validate(data) {
-    const errors = [];
-    const out = {};
-
-    if (data.patientName !== undefined) {
-      if (!isString(data.patientName) || data.patientName.trim().length < 2 || data.patientName.trim().length > 100) {
-        errors.push(err('patientName', 'El nombre debe tener entre 2 y 100 caracteres'));
-      } else {
-        out.patientName = data.patientName.trim();
-      }
-    }
-
-    if (data.patientPhone !== undefined) {
-      if (!isString(data.patientPhone) || data.patientPhone.trim().length < 6 || data.patientPhone.trim().length > 20) {
-        errors.push(err('patientPhone', 'El teléfono debe tener entre 6 y 20 caracteres'));
-      } else {
-        out.patientPhone = data.patientPhone.trim();
-      }
-    }
-
-    if (data.patientEmail !== undefined && data.patientEmail !== null && data.patientEmail !== '') {
-      if (!isString(data.patientEmail) || !EMAIL_RE.test(data.patientEmail)) {
-        errors.push(err('patientEmail', 'Debe ser un email válido'));
-      } else {
-        out.patientEmail = data.patientEmail.trim().toLowerCase();
-      }
-    } else if (data.patientEmail !== undefined) {
-      out.patientEmail = '';
-    }
-
-    if (data.treatmentId !== undefined) {
-      if (!isString(data.treatmentId) || !UUID_RE.test(data.treatmentId.trim())) {
-        errors.push(err('treatmentId', 'treatmentId debe ser un UUID válido'));
-      } else {
-        out.treatmentId = data.treatmentId.trim();
-      }
-    }
-
-    if (data.notes !== undefined && data.notes !== null) {
-      if (!isString(data.notes) || data.notes.length > 500) {
-        errors.push(err('notes', 'Las notas deben ser texto de máximo 500 caracteres'));
-      } else {
-        out.notes = data.notes;
-      }
-    }
-
-    if (data.scheduledAt !== undefined && data.scheduledAt !== null && data.scheduledAt !== '') {
-      if (!isString(data.scheduledAt) || !DATETIME_RE.test(data.scheduledAt)) {
-        errors.push(err('scheduledAt', 'scheduledAt debe ser una fecha ISO 8601'));
-      } else {
-        out.scheduledAt = data.scheduledAt;
-      }
-    } else if (data.scheduledAt !== undefined) {
-      out.scheduledAt = null;
-    }
-
-    if (data.status !== undefined) {
-      if (!VALID_APPOINTMENT_STATUSES.includes(data.status)) {
-        errors.push(err('status', `El estado debe ser uno de: ${VALID_APPOINTMENT_STATUSES.join(', ')}`));
-      } else {
-        out.status = data.status;
-      }
-    }
-
-    if (Object.keys(out).length === 0 && errors.length === 0) {
-      errors.push(err('body', 'Al menos un campo debe ser proporcionado para actualizar'));
-    }
-
-    return errors.length ? { success: false, errors } : { success: true, data: out };
-  },
-};
 
 // ---------------------------------------------------------------------------
 // refreshTokenSchema
@@ -854,8 +718,6 @@ module.exports = {
   updateTreatmentSchema,
   createBlogPostSchema,
   updateBlogPostSchema,
-  createAppointmentSchema,
-  updateAppointmentSchema,
   upsertSiteContentSchema,
   upsertContactSchema,
   upsertAboutUsSchema,

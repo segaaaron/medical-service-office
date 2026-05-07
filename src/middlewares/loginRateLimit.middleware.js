@@ -7,7 +7,7 @@ const loginRateLimiter = rateLimit({
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Demasiados intentos fallidos. Por favor intenta de nuevo más tarde.' },
+  message: { error: 'Demasiados intentos fallidos. Por favor intenta de nuevo en 15 minutos.' },
 });
 
 module.exports = { loginRateLimiter };

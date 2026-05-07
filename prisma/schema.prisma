@@ -47,7 +47,6 @@ model Treatment {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  appointments Appointment[]
 
   @@index([active])
 }
@@ -66,31 +65,6 @@ model BlogPost {
 
   @@index([published])
   @@index([publishedAt])
-}
-
-model Appointment {
-  id              String            @id @default(uuid())
-  patientName     String
-  patientPhone    String
-  patientEmail    String?
-  treatmentId     String
-  notes           String?
-  status          AppointmentStatus @default(PENDING)
-  scheduledAt     DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  treatment Treatment @relation(fields: [treatmentId], references: [id], onDelete: Restrict)
-
-  @@index([status])
-  @@index([scheduledAt])
-}
-
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
 }
 
 model Contact {

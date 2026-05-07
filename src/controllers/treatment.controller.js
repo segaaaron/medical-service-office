@@ -109,7 +109,7 @@ async function deleteTreatment(req, res, next) {
     return res.status(204).send();
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Tratamiento no encontrado' });
-    if (err.code === 'P2003') return res.status(409).json({ error: 'No se puede eliminar el tratamiento porque tiene citas registradas. Cancélalas primero.' });
+    if (err.code === 'P2003') return res.status(409).json({ error: 'No se puede eliminar el tratamiento porque está siendo referenciado por otros registros.' });
     next(err);
   }
 }
