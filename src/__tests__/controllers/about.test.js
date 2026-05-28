@@ -1,8 +1,7 @@
 jest.mock('../../services/prisma.service', () => ({
   aboutUs: {
-    findFirst: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
   },
 }));
 jest.mock('../../middlewares/upload.middleware', () => ({
@@ -14,12 +13,12 @@ const { deleteUploadedFile } = require('../../middlewares/upload.middleware');
 const { getAboutUs, upsertAboutUs } = require('../../controllers/about.controller');
 const { mockReq, mockRes, mockNext } = require('../helpers/mock-req-res');
 
-const RECORD = { id: '1', doctorName: 'Dra. Yasmin', imageUrl: '/uploads/old.webp' };
+const RECORD = { id: '1', singleton: true, doctorName: 'Dra. Yasmin', imageUrl: '/uploads/old.webp' };
 
 describe('about.controller', () => {
   describe('getAboutUs', () => {
     it('returns 404 when no record exists', async () => {
-      prisma.aboutUs.findFirst.mockResolvedValue(null);
+      prisma.aboutUs.findUnique.mockResolvedValue(null);
       const req = mockReq();
       const res = mockRes();
       await getAboutUs(req, res, mockNext());
@@ -28,7 +27,7 @@ describe('about.controller', () => {
     });
 
     it('returns record when it exists', async () => {
-      prisma.aboutUs.findFirst.mockResolvedValue(RECORD);
+      prisma.aboutUs.findUnique.mockResolvedValue(RECORD);
       const req = mockReq();
       const res = mockRes();
       await getAboutUs(req, res, mockNext());
@@ -37,48 +36,53 @@ describe('about.controller', () => {
   });
 
   describe('upsertAboutUs', () => {
-    it('creates new record with 201 when none exists', async () => {
-      prisma.aboutUs.findFirst.mockResolvedValue(null);
-      prisma.aboutUs.create.mockResolvedValue({ id: '2', ...mockReq().body });
-      const req = mockReq({ body: { doctorName: 'Nueva' } });
+    it('upserts and returns record', async () => {
+      prisma.aboutUs.upsert.mockResolvedValue(RECORD);
+      const req = mockReq({ body: { doctorName: 'Dra. Yasmin' } });
       const res = mockRes();
       await upsertAboutUs(req, res, mockNext());
-      expect(prisma.aboutUs.create).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(201);
-    });
-
-    it('updates existing record with 200', async () => {
-      const updated = { ...RECORD, doctorName: 'Actualizado' };
-      prisma.aboutUs.findFirst.mockResolvedValue(RECORD);
-      prisma.aboutUs.update.mockResolvedValue(updated);
-      const req = mockReq({ body: { doctorName: 'Actualizado' } });
-      const res = mockRes();
-      await upsertAboutUs(req, res, mockNext());
-      expect(prisma.aboutUs.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: RECORD.id } }));
-      expect(res.json).toHaveBeenCalledWith(updated);
+      expect(prisma.aboutUs.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { singleton: true } })
+      );
+      expect(res.json).toHaveBeenCalledWith(RECORD);
     });
 
     it('deletes old image when new image is uploaded', async () => {
-      prisma.aboutUs.findFirst.mockResolvedValue(RECORD);
-      prisma.aboutUs.update.mockResolvedValue(RECORD);
+      prisma.aboutUs.findUnique.mockResolvedValue(RECORD);
+      prisma.aboutUs.upsert.mockResolvedValue(RECORD);
       const req = mockReq({ body: {}, imageUrl: '/uploads/new.webp' });
       const res = mockRes();
       await upsertAboutUs(req, res, mockNext());
       expect(deleteUploadedFile).toHaveBeenCalledWith(RECORD.imageUrl);
     });
 
-    it('retries as update on P2002 race condition', async () => {
-      const p2002 = Object.assign(new Error('Unique'), { code: 'P2002' });
-      prisma.aboutUs.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(RECORD);
-      prisma.aboutUs.create.mockRejectedValue(p2002);
-      prisma.aboutUs.update.mockResolvedValue(RECORD);
-      const req = mockReq({ body: { doctorName: 'Retry' } });
+    it('does not delete image when no new image uploaded', async () => {
+      prisma.aboutUs.upsert.mockResolvedValue(RECORD);
+      const req = mockReq({ body: { doctorName: 'Sin imagen' } });
       const res = mockRes();
       await upsertAboutUs(req, res, mockNext());
-      expect(prisma.aboutUs.update).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(RECORD);
+      expect(deleteUploadedFile).not.toHaveBeenCalled();
+    });
+
+    it('deletes existing image and sets null when imageUrl: null sent', async () => {
+      prisma.aboutUs.findUnique.mockResolvedValue(RECORD);
+      prisma.aboutUs.upsert.mockResolvedValue({ ...RECORD, imageUrl: null });
+      const req = mockReq({ body: { imageUrl: null } });
+      const res = mockRes();
+      await upsertAboutUs(req, res, mockNext());
+      expect(deleteUploadedFile).toHaveBeenCalledWith(RECORD.imageUrl);
+      expect(prisma.aboutUs.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: expect.objectContaining({ imageUrl: null }) })
+      );
+    });
+
+    it('does not call deleteUploadedFile when imageUrl: null but no existing image', async () => {
+      prisma.aboutUs.findUnique.mockResolvedValue({ ...RECORD, imageUrl: null });
+      prisma.aboutUs.upsert.mockResolvedValue({ ...RECORD, imageUrl: null });
+      const req = mockReq({ body: { imageUrl: null } });
+      const res = mockRes();
+      await upsertAboutUs(req, res, mockNext());
+      expect(deleteUploadedFile).not.toHaveBeenCalled();
     });
   });
 });

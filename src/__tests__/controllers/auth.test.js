@@ -88,7 +88,7 @@ describe('auth.controller', () => {
     });
 
     it('returns new tokens on success', async () => {
-      verifyRefreshToken.mockReturnValue({ sub: 'uid-1' });
+      verifyRefreshToken.mockReturnValue({ sub: 'uid-1', role: 'ADMIN' });
       prisma.refreshToken.findUnique.mockResolvedValue({
         token: 'hashed-token',
         expiresAt: new Date(Date.now() + 1000 * 60 * 60),
@@ -101,6 +101,19 @@ describe('auth.controller', () => {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
       }));
+    });
+
+    it('propagates role from refresh token to new access token', async () => {
+      const { generateAccessToken } = require('../../services/auth.service');
+      verifyRefreshToken.mockReturnValue({ sub: 'uid-1', role: 'ADMIN' });
+      prisma.refreshToken.findUnique.mockResolvedValue({
+        token: 'hashed-token',
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+      });
+      prisma.$transaction.mockResolvedValue([]);
+      const req = mockReq({ body: { refreshToken: 'valid-token' } });
+      await refresh(req, mockRes(), mockNext());
+      expect(generateAccessToken).toHaveBeenCalledWith('uid-1', 'ADMIN');
     });
   });
 

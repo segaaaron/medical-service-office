@@ -11,15 +11,15 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-function generateAccessToken(userId) {
-  return jwt.sign({ sub: userId }, JWT_ACCESS_SECRET, {
+function generateAccessToken(userId, role) {
+  return jwt.sign({ sub: userId, role }, JWT_ACCESS_SECRET, {
     algorithm: 'HS256',
     expiresIn: JWT_ACCESS_EXPIRES_IN,
   });
 }
 
-function generateRefreshToken(userId) {
-  return jwt.sign({ sub: userId }, JWT_REFRESH_SECRET, {
+function generateRefreshToken(userId, role) {
+  return jwt.sign({ sub: userId, role }, JWT_REFRESH_SECRET, {
     algorithm: 'HS256',
     expiresIn: JWT_REFRESH_EXPIRES_IN,
   });

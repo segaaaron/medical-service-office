@@ -33,6 +33,7 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, expiresAt])
 }
 
 model Treatment {
@@ -51,6 +52,7 @@ model Treatment {
 
   @@index([active])
   @@index([order])
+  @@index([active, order])
 }
 
 model BlogPost {
@@ -67,10 +69,12 @@ model BlogPost {
 
   @@index([published])
   @@index([publishedAt])
+  @@index([createdAt])
 }
 
 model Contact {
   id                  String   @id @default(uuid())
+  singleton           Boolean  @unique @default(true)
   whatsappNumber      String
   whatsappUrl         String
   phone               String
@@ -98,6 +102,7 @@ model SiteContent {
 
 model Footer {
   id                   String   @id @default(uuid())
+  singleton            Boolean  @unique @default(true)
   doctorName           String?
   specialty            String?
   description          String?
@@ -116,6 +121,7 @@ model Footer {
 
 model Home {
   id               String   @id @default(uuid())
+  singleton        Boolean  @unique @default(true)
   // Hero
   specialties      String?
   doctorName       String?
@@ -140,6 +146,7 @@ model Home {
 
 model PromoBanner {
   id             String   @id @default(uuid())
+  singleton      Boolean  @unique @default(true)
   tag            String?
   title          String?
   highlightedText String?
@@ -157,6 +164,7 @@ model PromoBanner {
 
 model AboutUs {
   id                     String   @id @default(uuid())
+  singleton              Boolean  @unique @default(true)
   sectionLabel           String?
   doctorName             String?
   descriptionDoc         String?

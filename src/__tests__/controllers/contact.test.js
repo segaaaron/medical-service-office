@@ -1,8 +1,7 @@
 jest.mock('../../services/prisma.service', () => ({
   contact: {
-    findFirst: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
   },
 }));
 
@@ -17,19 +16,19 @@ const CONTACT_BODY = {
   mondayFridayHours: '9-18', saturdayHours: '9-14', sundayStatus: 'Cerrado',
   locationDescription: 'Av. Reforma 1',
 };
-const RECORD = { id: '1', ...CONTACT_BODY };
+const RECORD = { id: '1', singleton: true, ...CONTACT_BODY };
 
 describe('contact.controller', () => {
   describe('getContact', () => {
     it('returns 404 when no record', async () => {
-      prisma.contact.findFirst.mockResolvedValue(null);
+      prisma.contact.findUnique.mockResolvedValue(null);
       const res = mockRes();
       await getContact(mockReq(), res, mockNext());
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
     it('returns record', async () => {
-      prisma.contact.findFirst.mockResolvedValue(RECORD);
+      prisma.contact.findUnique.mockResolvedValue(RECORD);
       const res = mockRes();
       await getContact(mockReq(), res, mockNext());
       expect(res.json).toHaveBeenCalledWith(RECORD);
@@ -37,38 +36,25 @@ describe('contact.controller', () => {
   });
 
   describe('upsertContact', () => {
-    it('creates with 201 when none exists', async () => {
-      prisma.contact.findFirst.mockResolvedValue(null);
-      prisma.contact.create.mockResolvedValue(RECORD);
+    it('upserts and returns record', async () => {
+      prisma.contact.upsert.mockResolvedValue(RECORD);
       const req = mockReq({ body: CONTACT_BODY });
       const res = mockRes();
       await upsertContact(req, res, mockNext());
-      expect(prisma.contact.create).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(201);
-    });
-
-    it('updates with 200 when record exists', async () => {
-      prisma.contact.findFirst.mockResolvedValue(RECORD);
-      prisma.contact.update.mockResolvedValue(RECORD);
-      const req = mockReq({ body: CONTACT_BODY });
-      const res = mockRes();
-      await upsertContact(req, res, mockNext());
-      expect(prisma.contact.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: RECORD.id } }));
+      expect(prisma.contact.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { singleton: true } })
+      );
       expect(res.json).toHaveBeenCalledWith(RECORD);
     });
 
-    it('retries as update on P2002 race condition', async () => {
-      const p2002 = Object.assign(new Error(), { code: 'P2002' });
-      prisma.contact.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(RECORD);
-      prisma.contact.create.mockRejectedValue(p2002);
-      prisma.contact.update.mockResolvedValue(RECORD);
+    it('passes next on error', async () => {
+      const err = new Error('DB error');
+      prisma.contact.upsert.mockRejectedValue(err);
       const req = mockReq({ body: CONTACT_BODY });
       const res = mockRes();
-      await upsertContact(req, res, mockNext());
-      expect(prisma.contact.update).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(RECORD);
+      const next = mockNext();
+      await upsertContact(req, res, next);
+      expect(next).toHaveBeenCalledWith(err);
     });
   });
 });

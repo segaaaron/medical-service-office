@@ -7,8 +7,6 @@ async function listPosts(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
 
-    const where = {};
-
     const select = {
       id: true, title: true, slug: true, excerpt: true,
       content: true, imageUrl: true, published: true,
@@ -16,14 +14,8 @@ async function listPosts(req, res, next) {
     };
 
     const [posts, total] = await Promise.all([
-      prisma.blogPost.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        select,
-        skip,
-        take: limit,
-      }),
-      prisma.blogPost.count({ where }),
+      prisma.blogPost.findMany({ orderBy: { createdAt: 'desc' }, select, skip, take: limit }),
+      prisma.blogPost.count(),
     ]);
 
     return res.json({ data: posts, total, page, limit, totalPages: Math.ceil(total / limit) });
@@ -95,8 +87,9 @@ async function updatePost(req, res, next) {
     if (excerpt !== undefined) data.excerpt = excerpt ?? null;
     if (content !== undefined) data.content = content;
     if (imageUrl !== undefined) {
-      // Borrar imagen anterior si se está reemplazando
-      if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
+      if (imageUrl === null) {
+        if (current.imageUrl) deleteUploadedFile(current.imageUrl);
+      } else if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
         deleteUploadedFile(current.imageUrl);
       }
       data.imageUrl = imageUrl || null;

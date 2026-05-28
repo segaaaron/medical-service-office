@@ -120,8 +120,10 @@ const createTreatmentSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+    if (data.imageUrl !== undefined) {
+      if (data.imageUrl === null || data.imageUrl === '') {
+        out.imageUrl = null;
+      } else if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
@@ -191,8 +193,10 @@ const updateTreatmentSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+    if (data.imageUrl !== undefined) {
+      if (data.imageUrl === null || data.imageUrl === '') {
+        out.imageUrl = null;
+      } else if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
@@ -245,8 +249,10 @@ const createBlogPostSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+    if (data.imageUrl !== undefined) {
+      if (data.imageUrl === null || data.imageUrl === '') {
+        out.imageUrl = null;
+      } else if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
@@ -333,8 +339,10 @@ const updateBlogPostSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+    if (data.imageUrl !== undefined) {
+      if (data.imageUrl === null || data.imageUrl === '') {
+        out.imageUrl = null;
+      } else if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
@@ -469,8 +477,10 @@ const upsertAboutUsSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+    if (data.imageUrl !== undefined) {
+      if (data.imageUrl === null || data.imageUrl === '') {
+        out.imageUrl = null;
+      } else if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
@@ -557,8 +567,10 @@ const upsertPromoBannerSchema = {
       }
     }
 
-    if (data.imageUrl !== undefined && data.imageUrl !== null && data.imageUrl !== '') {
-      if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
+    if (data.imageUrl !== undefined) {
+      if (data.imageUrl === null || data.imageUrl === '') {
+        out.imageUrl = null;
+      } else if (!isString(data.imageUrl) || !UPLOAD_URL_RE.test(data.imageUrl)) {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;

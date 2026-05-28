@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const path = require('path');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
@@ -14,6 +15,9 @@ app.set('trust proxy', 1);
 
 // ── Security headers ────────────────────────────────────────────────────────
 app.use(helmet());
+
+// ── Compression ──────────────────────────────────────────────────────────────
+app.use(compression());
 
 // ── CORS ────────────────────────────────────────────────────────────────────
 const isProduction = process.env.NODE_ENV === 'production';
@@ -56,7 +60,10 @@ app.use(cors(corsOptions));
 app.options('/{*path}', cors(corsOptions)); // pre-flight for all routes
 
 // ── Archivos estáticos (imágenes subidas) ────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  maxAge: '1y',
+  immutable: true,
+}));
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: BODY_LIMIT }));

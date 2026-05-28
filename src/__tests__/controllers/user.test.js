@@ -32,7 +32,7 @@ describe('user.controller', () => {
     });
 
     it('returns user without password', async () => {
-      prisma.user.findUnique.mockResolvedValue(USER);
+      prisma.user.findUnique.mockResolvedValue(SAFE_USER);
       const req = mockReq({ user: { id: 'uid-1' } });
       const res = mockRes();
       await getMe(req, res, mockNext());
@@ -44,7 +44,7 @@ describe('user.controller', () => {
 
   describe('listUsers', () => {
     it('returns paginated users without passwords', async () => {
-      prisma.user.findMany.mockResolvedValue([USER]);
+      prisma.user.findMany.mockResolvedValue([SAFE_USER]);
       prisma.user.count.mockResolvedValue(1);
       const req = mockReq({ query: {} });
       const res = mockRes();
@@ -65,7 +65,7 @@ describe('user.controller', () => {
     });
 
     it('returns user without password', async () => {
-      prisma.user.findUnique.mockResolvedValue(USER);
+      prisma.user.findUnique.mockResolvedValue(SAFE_USER);
       const req = mockReq({ params: { id: 'uid-1' } });
       const res = mockRes();
       await getUser(req, res, mockNext());
@@ -83,7 +83,7 @@ describe('user.controller', () => {
     });
 
     it('creates user with 201 without password in response', async () => {
-      prisma.user.create.mockResolvedValue(USER);
+      prisma.user.create.mockResolvedValue(SAFE_USER);
       const req = mockReq({ body: { email: 'new@test.com', name: 'Nuevo', password: 'Pass1234!' }, ip: '127.0.0.1', originalUrl: '/api/users' });
       const res = mockRes();
       await createUser(req, res, mockNext());
@@ -110,7 +110,7 @@ describe('user.controller', () => {
     });
 
     it('updates user and returns without password', async () => {
-      prisma.user.update.mockResolvedValue(USER);
+      prisma.user.update.mockResolvedValue(SAFE_USER);
       const req = mockReq({ params: { id: 'uid-1' }, body: { name: 'Actualizado' }, ip: '127.0.0.1', originalUrl: '/api/users/uid-1' });
       const res = mockRes();
       await updateUser(req, res, mockNext());

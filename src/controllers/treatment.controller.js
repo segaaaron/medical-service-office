@@ -7,16 +7,9 @@ async function listTreatments(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
 
-    const where = {};
-
     const [treatments, total] = await Promise.all([
-      prisma.treatment.findMany({
-        where,
-        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-        skip,
-        take: limit,
-      }),
-      prisma.treatment.count({ where }),
+      prisma.treatment.findMany({ orderBy: [{ order: 'asc' }, { createdAt: 'asc' }], skip, take: limit }),
+      prisma.treatment.count(),
     ]);
 
     return res.json({ data: treatments, total, page, limit, totalPages: Math.ceil(total / limit) });
@@ -82,7 +75,9 @@ async function updateTreatment(req, res, next) {
     if (price !== undefined) data.price = price === '' ? null : price;
     if (tag !== undefined) data.tag = (tag === '' || tag == null) ? null : tag;
     if (imageUrl !== undefined) {
-      if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
+      if (imageUrl === null) {
+        if (current.imageUrl) deleteUploadedFile(current.imageUrl);
+      } else if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
         deleteUploadedFile(current.imageUrl);
       }
       data.imageUrl = imageUrl || null;

@@ -3,7 +3,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 async function getPromoBanner(req, res, next) {
   try {
-    const banner = await prisma.promoBanner.findFirst();
+    const banner = await prisma.promoBanner.findUnique({ where: { singleton: true } });
     if (!banner) return res.status(404).json({ error: 'Banner promocional no encontrado' });
     return res.json(banner);
   } catch (err) {
@@ -15,31 +15,24 @@ async function upsertPromoBanner(req, res, next) {
   const data = { ...req.body };
 
   try {
-    const existing = await prisma.promoBanner.findFirst();
-
     if (req.imageUrl) {
+      const existing = await prisma.promoBanner.findUnique({ where: { singleton: true } });
       if (existing?.imageUrl && existing.imageUrl !== req.imageUrl) {
         deleteUploadedFile(existing.imageUrl);
       }
       data.imageUrl = req.imageUrl;
+    } else if (data.imageUrl === null) {
+      const existing = await prisma.promoBanner.findUnique({ where: { singleton: true } });
+      if (existing?.imageUrl) deleteUploadedFile(existing.imageUrl);
     }
 
-    if (existing) {
-      const banner = await prisma.promoBanner.update({ where: { id: existing.id }, data });
-      return res.json(banner);
-    }
-    const banner = await prisma.promoBanner.create({ data: { ...data, active: data.active ?? false } });
-    return res.status(201).json(banner);
+    const banner = await prisma.promoBanner.upsert({
+      where: { singleton: true },
+      update: data,
+      create: { active: false, ...data },
+    });
+    return res.json(banner);
   } catch (err) {
-    if (err.code === 'P2002') {
-      try {
-        const existing = await prisma.promoBanner.findFirst();
-        if (existing) {
-          const banner = await prisma.promoBanner.update({ where: { id: existing.id }, data });
-          return res.json(banner);
-        }
-      } catch (retryErr) { return next(retryErr); }
-    }
     next(err);
   }
 }

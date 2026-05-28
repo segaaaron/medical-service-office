@@ -28,8 +28,8 @@ async function login(req, res, next) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    const accessToken = generateAccessToken(user.id, user.role);
+    const refreshToken = generateRefreshToken(user.id, user.role);
 
     const expiresAt = new Date(Date.now() + ms(JWT_REFRESH_EXPIRES_IN));
     // Store hashed token — raw token never touches DB
@@ -76,8 +76,8 @@ async function refresh(req, res, next) {
       return res.status(401).json({ error: 'Token de refresco no encontrado o expirado' });
     }
 
-    const newAccessToken = generateAccessToken(payload.sub);
-    const newRefreshToken = generateRefreshToken(payload.sub);
+    const newAccessToken = generateAccessToken(payload.sub, payload.role);
+    const newRefreshToken = generateRefreshToken(payload.sub, payload.role);
     const expiresAt = new Date(Date.now() + ms(JWT_REFRESH_EXPIRES_IN));
 
     await prisma.$transaction([

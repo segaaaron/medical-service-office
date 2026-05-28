@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
-const { upload, compressAndSave } = require('../middlewares/upload.middleware');
+const { upload, compressAndSave, deleteUploadedFile } = require('../middlewares/upload.middleware');
 const { validate } = require('../middlewares/validate.middleware');
 const { upsertSiteContentSchema } = require('../schemas/index');
 const {
@@ -14,8 +14,6 @@ const {
 
 const router = Router();
 
-// Cuando el body llega como multipart/form-data, el campo `value` es un string JSON.
-// Este middleware lo parsea a objeto para que el schema de validación lo acepte.
 function parseValueJson(req, res, next) {
   if (req.body && typeof req.body.value === 'string') {
     try {
@@ -27,13 +25,19 @@ function parseValueJson(req, res, next) {
   next();
 }
 
-// Public — fetch content by key
+function cleanupOnError(req, res, next) {
+  res.on('finish', () => {
+    if (res.statusCode >= 400 && req.imageUrl) deleteUploadedFile(req.imageUrl);
+  });
+  next();
+}
+
+// Public
 router.get('/', listSiteContent);
 router.get('/:key', getSiteContent);
 
-// Protected — only authenticated admins
-// upload.single('image') permite recibir multipart/form-data (igual que el blog)
-router.put('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, parseValueJson, validate(upsertSiteContentSchema), upsertSiteContent);
+// Protected
+router.put('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, cleanupOnError, parseValueJson, validate(upsertSiteContentSchema), upsertSiteContent);
 router.delete('/:key', authenticate, requireRole('ADMIN'), deleteSiteContent);
 
 // Upload de imagen para secciones de contenido (ej. foto del doctor en treatmentsPage)

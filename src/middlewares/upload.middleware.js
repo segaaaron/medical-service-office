@@ -2,6 +2,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const fsp = require('fs/promises');
 const crypto = require('crypto');
 const { UPLOAD_MAX_SIZE_MB, WEBP_QUALITY } = require('../config/env');
 
@@ -41,7 +42,7 @@ async function compressAndSave(req, res, next) {
 
     await sharp(req.file.buffer)
       .rotate()
-      .webp({ quality: WEBP_QUALITY, effort: 6 })
+      .webp({ quality: WEBP_QUALITY, effort: 4 })
       .toFile(dest);
 
     req.imageUrl = `/uploads/${filename}`;
@@ -58,19 +59,17 @@ async function compressAndSave(req, res, next) {
 function deleteUploadedFile(imageUrl) {
   if (!imageUrl) return;
   try {
-    // Soporta tanto path relativo (/uploads/file.webp) como URL completa (http://host/uploads/file.webp)
     let pathname = imageUrl;
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       pathname = new URL(imageUrl).pathname;
     }
     if (!pathname.startsWith('/uploads/')) return;
-    const filename = path.basename(pathname);
-    const filePath = path.join(UPLOAD_DIR, filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    const filePath = path.join(UPLOAD_DIR, path.basename(pathname));
+    fsp.unlink(filePath).catch((err) => {
+      if (err.code !== 'ENOENT') console.error(`[upload] unlink failed: ${err.message}`);
+    });
   } catch {
-    // URL inválida o error de fs — ignorar silenciosamente
+    // URL inválida — ignorar
   }
 }
 

@@ -4,16 +4,13 @@ const logger = require('../config/logger');
 const { BCRYPT_SALT_ROUNDS } = require('../config/env');
 const { parsePagination } = require('../utils/pagination');
 
-function safeUser(user) {
-  const { password, ...rest } = user;
-  return rest;
-}
+const USER_SELECT = { id: true, email: true, name: true, role: true, createdAt: true, updatedAt: true };
 
 async function getMe(req, res, next) {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: USER_SELECT });
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-    return res.json(safeUser(user));
+    return res.json(user);
   } catch (err) {
     next(err);
   }
@@ -23,10 +20,10 @@ async function listUsers(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
     const [users, total] = await Promise.all([
-      prisma.user.findMany({ orderBy: { createdAt: 'desc' }, skip, take: limit }),
+      prisma.user.findMany({ orderBy: { createdAt: 'desc' }, skip, take: limit, select: USER_SELECT }),
       prisma.user.count(),
     ]);
-    return res.json({ data: users.map(safeUser), total, page, limit, totalPages: Math.ceil(total / limit) });
+    return res.json({ data: users, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -34,9 +31,9 @@ async function listUsers(req, res, next) {
 
 async function getUser(req, res, next) {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: USER_SELECT });
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-    return res.json(safeUser(user));
+    return res.json(user);
   } catch (err) {
     next(err);
   }
@@ -46,9 +43,9 @@ async function createUser(req, res, next) {
   try {
     const { email, name, password } = req.body;
     const hashed = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-    const user = await prisma.user.create({ data: { email, name, password: hashed } });
+    const user = await prisma.user.create({ data: { email, name, password: hashed }, select: USER_SELECT });
     logger.info({ event: 'user_created', userId: user.id, ip: req.ip, path: req.originalUrl }, 'User created');
-    return res.status(201).json(safeUser(user));
+    return res.status(201).json(user);
   } catch (err) {
     if (err.code === 'P2002') return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
     next(err);
@@ -63,9 +60,9 @@ async function updateUser(req, res, next) {
     if (name !== undefined) data.name = name;
     if (password !== undefined) data.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
-    const user = await prisma.user.update({ where: { id: req.params.id }, data });
+    const user = await prisma.user.update({ where: { id: req.params.id }, data, select: USER_SELECT });
     logger.info({ event: 'user_updated', userId: user.id, ip: req.ip, path: req.originalUrl }, 'User updated');
-    return res.json(safeUser(user));
+    return res.json(user);
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Usuario no encontrado' });
     if (err.code === 'P2002') return res.status(409).json({ error: 'El correo electrónico ya está registrado' });

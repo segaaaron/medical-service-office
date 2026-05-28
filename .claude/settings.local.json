@@ -16,7 +16,34 @@
       "Bash(git log:*)",
       "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/src -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
       "Skill(update-config)",
-      "Bash(jq:*)"
+      "Bash(jq:*)",
+      "Read(//Users/miguelangelsaraviabelmonte/dev-backend/**)",
+      "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office -type f -name *promo* -o -name *banner*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/**)",
+      "Bash(done)",
+      "Bash(find /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/src -name *.js)",
+      "Bash(grep -r \"authenticate\" /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/src/routes/*.js)",
+      "Bash(npm audit:*)",
+      "Bash(xargs cat *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(git filter-branch *)",
+      "Bash(git stash *)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch .env' --prune-empty --tag-name-filter cat -- --all)",
+      "Bash(grep -rn '\\\\$queryRaw\\\\|\\\\$executeRaw' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/src/)",
+      "Bash(npm install *)",
+      "Bash(npm test *)",
+      "Bash(grep -E \"\\\\.\\(js|ts\\)$\")",
+      "Bash(npx jest *)",
+      "mcp__plugin_socraticode_socraticode__codebase_status",
+      "mcp__plugin_socraticode_socraticode__codebase_graph_stats",
+      "Bash(npm list *)",
+      "Bash(awk 'NR>=38 && NR<=55 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)",
+      "Bash(awk 'NR>=56 && NR<=70 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)",
+      "Bash(awk 'NR>=155 && NR<=175 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)"
     ]
   },
   "hooks": {
@@ -26,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.command' | grep -q 'git commit' && cd /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office && node scripts/clean-orphan-files.js --delete 2>/dev/null || true",
+            "command": "jq -r '.tool_input.command' | grep -qE '^git commit ' && cd /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office && node scripts/clean-orphan-files.js --delete 2>/dev/null || true",
             "statusMessage": "Limpiando archivos huérfanos..."
           }
         ]

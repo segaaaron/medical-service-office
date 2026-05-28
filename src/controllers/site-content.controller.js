@@ -66,6 +66,9 @@ async function upsertSiteContent(req, res, next) {
 async function deleteSiteContent(req, res, next) {
   try {
     const { key } = req.params;
+    const record = await prisma.siteContent.findUnique({ where: { key } });
+    if (!record) return res.status(404).json({ error: 'Contenido no encontrado' });
+    if (record.value?.doctorImage) deleteUploadedFile(record.value.doctorImage);
     await prisma.siteContent.delete({ where: { key } });
     return res.status(204).send();
   } catch (err) {
