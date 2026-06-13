@@ -1,4 +1,4 @@
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const crypto = require('crypto');
 const prisma = require('../services/prisma.service');
 
@@ -55,7 +55,7 @@ const prismaStore = {
 const reviewRateLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
   max: 2,
-  keyGenerator: (req) => hashIp(req.ip),
+  keyGenerator: (req) => hashIp(ipKeyGenerator(req.ip)),
   skipSuccessfulRequests: false,
   standardHeaders: true,
   legacyHeaders: false,
@@ -68,7 +68,7 @@ const reviewRateLimiter = rateLimit({
 const validateRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
-  keyGenerator: (req) => hashIp(req.ip),
+  keyGenerator: (req) => hashIp(ipKeyGenerator(req.ip)),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'RATE_LIMITED' },
