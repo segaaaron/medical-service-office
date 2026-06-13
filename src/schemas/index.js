@@ -774,6 +774,107 @@ const createReviewSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// createInviteSchema — admin crea la invitación de reseña
+// ---------------------------------------------------------------------------
+const createInviteSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (!isString(data.patient_name) || data.patient_name.trim().length < 2 || data.patient_name.trim().length > 100) {
+      errors.push(err('patient_name', 'El nombre es requerido (2 a 100 caracteres)'));
+    } else {
+      out.patient_name = data.patient_name.trim();
+    }
+
+    if (!isString(data.patient_lastname) || data.patient_lastname.trim().length < 2 || data.patient_lastname.trim().length > 100) {
+      errors.push(err('patient_lastname', 'El apellido es requerido (2 a 100 caracteres)'));
+    } else {
+      out.patient_lastname = data.patient_lastname.trim();
+    }
+
+    if (data.email !== undefined && data.email !== null && data.email !== '') {
+      if (!isString(data.email) || data.email.trim().length > 150 || !EMAIL_RE.test(data.email.trim())) {
+        errors.push(err('email', 'Correo electrónico inválido (máximo 150 caracteres)'));
+      } else {
+        out.email = data.email.trim();
+      }
+    } else {
+      out.email = null;
+    }
+
+    if (data.phone !== undefined && data.phone !== null && data.phone !== '') {
+      if (!isString(data.phone) || data.phone.trim().length > 20) {
+        errors.push(err('phone', 'Teléfono inválido (máximo 20 caracteres)'));
+      } else {
+        out.phone = data.phone.trim();
+      }
+    } else {
+      out.phone = null;
+    }
+
+    if (errors.length) {
+      return {
+        success: false,
+        errors,
+        formatted: {
+          error: 'VALIDATION_ERROR',
+          fields: Object.fromEntries(errors.map(e => [e.field, e.message])),
+        },
+      };
+    }
+
+    return { success: true, data: out };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// submitInviteSchema — paciente envía su reseña vía link único
+// ---------------------------------------------------------------------------
+const submitInviteSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    const rating = Number(data.rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      errors.push(err('rating', 'Requerido — debe ser un entero entre 1 y 5'));
+    } else {
+      out.rating = rating;
+    }
+
+    if (!isString(data.body) || data.body.trim().length < 20 || data.body.trim().length > 800) {
+      errors.push(err('body', 'Mínimo 20 caracteres, máximo 800'));
+    } else {
+      out.body = data.body.trim();
+    }
+
+    if (data.treatment !== undefined && data.treatment !== null && data.treatment !== '') {
+      if (!isString(data.treatment) || data.treatment.trim().length > 150) {
+        errors.push(err('treatment', 'Máximo 150 caracteres'));
+      } else {
+        out.treatment = data.treatment.trim();
+      }
+    } else {
+      out.treatment = null;
+    }
+
+    if (errors.length) {
+      return {
+        success: false,
+        errors,
+        formatted: {
+          error: 'VALIDATION_ERROR',
+          fields: Object.fromEntries(errors.map(e => [e.field, e.message])),
+        },
+      };
+    }
+
+    return { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
   refreshTokenSchema,
@@ -790,4 +891,6 @@ module.exports = {
   upsertPromoBannerSchema,
   upsertHomeSchema,
   createReviewSchema,
+  createInviteSchema,
+  submitInviteSchema,
 };

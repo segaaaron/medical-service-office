@@ -176,22 +176,60 @@ enum ReviewStatus {
   deleted
 }
 
+enum ReviewInviteStatus {
+  pending
+  used
+  expired
+  revoked
+}
+
 model Review {
-  id          String       @id @default(uuid())
-  patientName String       @db.VarChar(100) @map("patient_name")
-  treatment   String?      @db.VarChar(150)
-  body        String
-  rating      Int          @db.SmallInt
-  status      ReviewStatus @default(pending)
-  ipHash      String?      @db.VarChar(64) @map("ip_hash")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  approvedAt  DateTime?    @map("approved_at")
-  deletedAt   DateTime?    @map("deleted_at")
+  id              String       @id @default(uuid())
+  patientName     String       @db.VarChar(100) @map("patient_name")
+  patientLastname String?      @db.VarChar(100) @map("patient_lastname")
+  treatment       String?      @db.VarChar(150)
+  body            String
+  rating          Int          @db.SmallInt
+  status          ReviewStatus @default(pending)
+  ipHash          String?      @db.VarChar(64) @map("ip_hash")
+  inviteId        String?      @map("invite_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  approvedAt      DateTime?    @map("approved_at")
+  deletedAt       DateTime?    @map("deleted_at")
+
+  // Invitación de la que nació esta reseña (reviews.invite_id → review_invites.id)
+  originInvite  ReviewInvite? @relation("ReviewOrigin", fields: [inviteId], references: [id], onDelete: SetNull)
+  // Invitación que apunta a esta reseña vía review_invites.review_id
+  resultInvite  ReviewInvite? @relation("InviteResult")
 
   @@index([status])
   @@index([createdAt(sort: Desc)])
   @@index([status, approvedAt(sort: Desc)])
+  @@index([inviteId])
   @@map("reviews")
+}
+
+model ReviewInvite {
+  id              String             @id @default(uuid())
+  token           String             @unique @db.VarChar(64)
+  patientName     String             @db.VarChar(100) @map("patient_name")
+  patientLastname String             @db.VarChar(100) @map("patient_lastname")
+  email           String?            @db.VarChar(150)
+  phone           String?            @db.VarChar(20)
+  status          ReviewInviteStatus @default(pending)
+  reviewId        String?            @unique @map("review_id")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  expiresAt       DateTime           @map("expires_at")
+  usedAt          DateTime?          @map("used_at")
+
+  // Reseña creada a partir de esta invitación (review_invites.review_id → reviews.id)
+  review          Review?  @relation("InviteResult", fields: [reviewId], references: [id], onDelete: SetNull)
+  // Reseñas que nacieron de esta invitación (back-relation de Review.originInvite)
+  createdReviews  Review[] @relation("ReviewOrigin")
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("review_invites")
 }
 
 model AboutUs {

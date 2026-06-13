@@ -1,11 +1,11 @@
 const prisma = require('../services/prisma.service');
-const { hashIp } = require('../middlewares/reviewRateLimit.middleware');
 
 // Campos expuestos al público — nunca ip_hash, deleted_at
 function toPublicReview(r) {
   return {
     id:          r.id,
     patient_name: r.patientName,
+    patient_lastname: r.patientLastname,
     treatment:   r.treatment,
     body:        r.body,
     rating:      r.rating,
@@ -18,6 +18,7 @@ function toAdminReview(r) {
   return {
     id:           r.id,
     patient_name: r.patientName,
+    patient_lastname: r.patientLastname,
     treatment:    r.treatment,
     body:         r.body,
     rating:       r.rating,
@@ -26,28 +27,6 @@ function toAdminReview(r) {
     approved_at:  r.approvedAt,
     deleted_at:   r.deletedAt,
   };
-}
-
-// POST /api/reviews — público
-async function createReview(req, res, next) {
-  try {
-    const { patient_name, treatment, body, rating } = req.body;
-
-    const review = await prisma.review.create({
-      data: {
-        patientName: patient_name,
-        treatment:   treatment ?? null,
-        body,
-        rating,
-        ipHash:      hashIp(req.ip),
-        status:      'pending',
-      },
-    });
-
-    return res.status(201).json({ id: review.id, status: review.status });
-  } catch (err) {
-    next(err);
-  }
 }
 
 // GET /api/reviews/public — público
@@ -59,7 +38,7 @@ async function listPublicReviews(req, res, next) {
         orderBy: { approvedAt: 'desc' },
         take:    20,
         select: {
-          id: true, patientName: true, treatment: true,
+          id: true, patientName: true, patientLastname: true, treatment: true,
           body: true, rating: true, approvedAt: true,
         },
       }),
@@ -179,7 +158,6 @@ async function deleteReview(req, res, next) {
 }
 
 module.exports = {
-  createReview,
   listPublicReviews,
   listAdminReviews,
   getStats,
