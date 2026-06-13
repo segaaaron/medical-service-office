@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const routes = require('./routes/index');
 const { errorMiddleware } = require('./middlewares/error.middleware');
@@ -79,8 +80,17 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// ── Global API rate limiter ──────────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes. Intenta de nuevo en un momento.' },
+});
+
 // ── API routes ───────────────────────────────────────────────────────────────
-app.use('/api', routes);
+app.use('/api', globalLimiter, routes);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {

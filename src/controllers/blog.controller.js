@@ -6,6 +6,8 @@ const { parsePagination } = require('../utils/pagination');
 async function listPosts(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
+    const isAdmin = req.user?.role === 'ADMIN';
+    const where = isAdmin ? {} : { published: true };
 
     const select = {
       id: true, title: true, slug: true, excerpt: true,
@@ -14,8 +16,8 @@ async function listPosts(req, res, next) {
     };
 
     const [posts, total] = await Promise.all([
-      prisma.blogPost.findMany({ orderBy: { createdAt: 'desc' }, select, skip, take: limit }),
-      prisma.blogPost.count(),
+      prisma.blogPost.findMany({ where, orderBy: { createdAt: 'desc' }, select, skip, take: limit }),
+      prisma.blogPost.count({ where }),
     ]);
 
     return res.json({ data: posts, total, page, limit, totalPages: Math.ceil(total / limit) });

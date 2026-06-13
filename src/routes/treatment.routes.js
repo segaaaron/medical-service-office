@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
 const { upload, compressAndSave, mergeImageUrl, deleteUploadedFile } = require('../middlewares/upload.middleware');
 const {
@@ -22,7 +22,7 @@ function cleanupOnError(req, res, next) {
 
 const router = Router();
 
-router.get('/', listTreatments);
+router.get('/', optionalAuthenticate, listTreatments);
 router.get('/:id', getTreatment);
 
 router.patch('/reorder', authenticate, requireRole('ADMIN'), reorderTreatments);

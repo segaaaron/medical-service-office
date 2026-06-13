@@ -1,3 +1,4 @@
+const { Prisma } = require('@prisma/client');
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
@@ -6,10 +7,12 @@ const { parsePagination } = require('../utils/pagination');
 async function listTreatments(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
+    const isAdmin = req.user?.role === 'ADMIN';
+    const where = isAdmin ? {} : { active: true };
 
     const [treatments, total] = await Promise.all([
-      prisma.treatment.findMany({ orderBy: [{ order: 'asc' }, { createdAt: 'asc' }], skip, take: limit }),
-      prisma.treatment.count(),
+      prisma.treatment.findMany({ where, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }], skip, take: limit }),
+      prisma.treatment.count({ where }),
     ]);
 
     return res.json({ data: treatments, total, page, limit, totalPages: Math.ceil(total / limit) });
@@ -109,12 +112,18 @@ async function deleteTreatment(req, res, next) {
   }
 }
 
+const MAX_REORDER_ITEMS = 200;
+
 async function reorderTreatments(req, res, next) {
   try {
     const items = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'El body debe ser un array no vacío' });
+    }
+
+    if (items.length > MAX_REORDER_ITEMS) {
+      return res.status(400).json({ error: `Máximo ${MAX_REORDER_ITEMS} items por operación` });
     }
 
     for (const item of items) {
@@ -131,15 +140,18 @@ async function reorderTreatments(req, res, next) {
       return res.status(400).json({ error: 'El body contiene IDs duplicados' });
     }
 
-    await prisma.$transaction(
-      items.map(({ id, order }) =>
-        prisma.treatment.update({ where: { id }, data: { order } })
-      )
-    );
+    // Single UPDATE...FROM VALUES — O(1) round-trip regardless of N, no row-lock storm
+    await prisma.$executeRaw`
+      UPDATE "Treatment" AS t
+      SET "order" = c.ord::int
+      FROM (VALUES ${Prisma.join(
+        items.map(i => Prisma.sql`(${i.id}::uuid, ${i.order}::int)`)
+      )}) AS c(id, ord)
+      WHERE t.id = c.id
+    `;
 
     return res.json({ ok: true });
   } catch (err) {
-    if (err.code === 'P2025') return res.status(404).json({ error: 'Uno o más tratamientos no fueron encontrados' });
     next(err);
   }
 }

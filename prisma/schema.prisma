@@ -162,6 +162,38 @@ model PromoBanner {
   updatedAt      DateTime @updatedAt
 }
 
+model RateLimit {
+  ipHash  String   @id @db.VarChar(64) @map("ip_hash")
+  count   Int      @db.SmallInt @default(1)
+  resetAt DateTime @map("reset_at")
+
+  @@map("rate_limits")
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  deleted
+}
+
+model Review {
+  id          String       @id @default(uuid())
+  patientName String       @db.VarChar(100) @map("patient_name")
+  treatment   String?      @db.VarChar(150)
+  body        String
+  rating      Int          @db.SmallInt
+  status      ReviewStatus @default(pending)
+  ipHash      String?      @db.VarChar(64) @map("ip_hash")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  approvedAt  DateTime?    @map("approved_at")
+  deletedAt   DateTime?    @map("deleted_at")
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([status, approvedAt(sort: Desc)])
+  @@map("reviews")
+}
+
 model AboutUs {
   id                     String   @id @default(uuid())
   singleton              Boolean  @unique @default(true)

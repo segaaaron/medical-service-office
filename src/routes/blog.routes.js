@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
 const { upload, compressAndSave, mergeImageUrl, deleteUploadedFile } = require('../middlewares/upload.middleware');
 const {
@@ -22,7 +22,7 @@ function cleanupOnError(req, res, next) {
 
 const router = Router();
 
-router.get('/', listPosts);
+router.get('/', optionalAuthenticate, listPosts);
 router.post('/upload-image', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, uploadImage);
 
 router.get('/:id', getPost);

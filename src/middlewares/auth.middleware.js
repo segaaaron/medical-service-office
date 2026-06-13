@@ -19,4 +19,16 @@ function authenticate(req, res, next) {
   }
 }
 
-module.exports = { authenticate };
+function optionalAuthenticate(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) return next();
+  try {
+    const payload = verifyAccessToken(authHeader.split(' ')[1]);
+    req.user = { id: payload.sub, role: payload.role };
+  } catch {
+    // invalid token → treat as unauthenticated, don't block
+  }
+  next();
+}
+
+module.exports = { authenticate, optionalAuthenticate };

@@ -721,6 +721,59 @@ const refreshTokenSchema = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// createReviewSchema
+// ---------------------------------------------------------------------------
+const createReviewSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (!isString(data.patient_name) || data.patient_name.trim().length < 1 || data.patient_name.trim().length > 100) {
+      errors.push(err('patient_name', 'El nombre es requerido (máximo 100 caracteres)'));
+    } else {
+      out.patient_name = data.patient_name.trim();
+    }
+
+    if (!isString(data.body) || data.body.trim().length < 20 || data.body.trim().length > 800) {
+      errors.push(err('body', 'Mínimo 20 caracteres, máximo 800'));
+    } else {
+      out.body = data.body.trim();
+    }
+
+    const rating = Number(data.rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      errors.push(err('rating', 'Requerido — debe ser un entero entre 1 y 5'));
+    } else {
+      out.rating = rating;
+    }
+
+    if (data.treatment !== undefined && data.treatment !== null && data.treatment !== '') {
+      if (!isString(data.treatment) || data.treatment.trim().length > 150) {
+        errors.push(err('treatment', 'Máximo 150 caracteres'));
+      } else {
+        out.treatment = data.treatment.trim();
+      }
+    } else {
+      out.treatment = null;
+    }
+
+    if (errors.length) {
+      return {
+        success: false,
+        errors,
+        // formato que espera el front: { error, fields }
+        formatted: {
+          error: 'VALIDATION_ERROR',
+          fields: Object.fromEntries(errors.map(e => [e.field, e.message])),
+        },
+      };
+    }
+
+    return { success: true, data: out };
+  },
+};
+
 module.exports = {
   loginSchema,
   refreshTokenSchema,
@@ -736,4 +789,5 @@ module.exports = {
   upsertFooterSchema,
   upsertPromoBannerSchema,
   upsertHomeSchema,
+  createReviewSchema,
 };

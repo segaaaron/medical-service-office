@@ -10,7 +10,7 @@ const {
 const { JWT_REFRESH_EXPIRES_IN } = require('../config/env');
 const logger = require('../config/logger');
 
-const DUMMY_HASH = '$2b$12$invalidhashfortimingXXXXXXXXXXXXXXXXXXXXXXXXXX';
+const DUMMY_HASH = '$2b$12$3iqnboz.QcXZQwWHTtD5muvHfn9x2LDblupy.0bwq8e8csIuKTNYG';
 
 async function login(req, res, next) {
   try {

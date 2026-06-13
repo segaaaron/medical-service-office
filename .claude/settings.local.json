@@ -43,7 +43,9 @@
       "Bash(npm list *)",
       "Bash(awk 'NR>=38 && NR<=55 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)",
       "Bash(awk 'NR>=56 && NR<=70 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)",
-      "Bash(awk 'NR>=155 && NR<=175 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)"
+      "Bash(awk 'NR>=155 && NR<=175 {print NR\": \"$0}' /Users/miguelangelsaraviabelmonte/dev-backend/medical-service-office/prisma/schema.prisma)",
+      "Bash(rm /Users/miguelangelsaraviabelmonte/.claude/agents/nextjs-prisma-elite.md)",
+      "Bash(rmdir /Users/miguelangelsaraviabelmonte/.claude/agents)"
     ]
   },
   "hooks": {

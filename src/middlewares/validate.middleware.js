@@ -11,10 +11,9 @@ function validate(schema) {
     const result = schema.validate(body);
 
     if (!result.success) {
-      return res.status(400).json({
-        error: 'Error de validación',
-        details: result.errors,
-      });
+      const status = result.formatted ? 422 : 400;
+      const body = result.formatted ?? { error: 'Error de validación', details: result.errors };
+      return res.status(status).json(body);
     }
 
     req.body = result.data;
