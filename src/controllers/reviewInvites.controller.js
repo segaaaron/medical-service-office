@@ -25,6 +25,9 @@ function generateToken() {
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
+// Base pública del sitio para armar el link de reseña que abre el paciente.
+const WEB_URL = (process.env.PUBLIC_WEB_URL || 'https://yasminmedrano.com').replace(/\/+$/, '');
+
 // Marca como 'expired' las invitaciones pending cuya ventana ya venció (lazy-expire en lectura).
 // O(filas vencidas) con índice en status — barato, evita un cron obligatorio.
 async function expireStale(now) {
@@ -226,8 +229,43 @@ async function submitInvite(req, res, next) {
   }
 }
 
+// POST /api/reviews/invites/bot — creación de invitación para el bot (Loreley).
+// Autenticada por secreto compartido (header x-bot-secret) en la ruta. Devuelve el link listo para enviar.
+async function createInviteBot(req, res, next) {
+  const patientName     = (req.body.patient_name || '').toString().trim().slice(0, 100) || 'Paciente';
+  const patientLastname = (req.body.patient_lastname || '').toString().trim().slice(0, 100) || '-';
+  const phone           = req.body.phone ? req.body.phone.toString().trim().slice(0, 20) : null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const expiresAt = new Date(Date.now() + SEVEN_DAYS_MS);
+      const invite = await prisma.reviewInvite.create({
+        data: {
+          token:           generateToken(),
+          patientName,
+          patientLastname,
+          email:           null,
+          phone,
+          status:          'pending',
+          expiresAt,
+        },
+      });
+
+      return res.status(201).json({
+        token:      invite.token,
+        link:       `${WEB_URL}/resenas/r/${invite.token}`,
+        expires_at: invite.expiresAt,
+      });
+    } catch (err) {
+      if (err.code === 'P2002' && attempt < 2) continue;
+      return next(err);
+    }
+  }
+}
+
 module.exports = {
   createInvite,
+  createInviteBot,
   listInvites,
   revokeInvite,
   validateInvite,
