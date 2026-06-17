@@ -37,18 +37,17 @@ model RefreshToken {
 }
 
 model Treatment {
-  id              String   @id @default(uuid())
-  name            String
-  slug            String   @unique
-  description     String?
-  price           Float?
-  tag             String?
-  imageUrl        String?
-  active          Boolean  @default(false)
-  order           Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       Float?
+  tag         String?
+  imageUrl    String?
+  active      Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([active])
   @@index([order])
@@ -86,6 +85,9 @@ model Contact {
   saturdayHours       String
   sundayStatus        String
   locationDescription String
+  latitude            Float?
+  longitude           Float?
+  mapsUrl             String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
@@ -101,70 +103,70 @@ model SiteContent {
 }
 
 model Footer {
-  id                   String   @id @default(uuid())
-  singleton            Boolean  @unique @default(true)
-  doctorName           String?
-  specialty            String?
-  description          String?
-  whatsappUrl          String?
-  facebookUrl          String?
-  instagramUrl         String?
-  facialTreatments     Json?
-  bodyTreatments       Json?
-  officeLinks          Json?
-  legalLinks           Json?
-  copyrightText        String?
-  designedByText       String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
-model Home {
   id               String   @id @default(uuid())
   singleton        Boolean  @unique @default(true)
-  // Hero
-  specialties      String?
   doctorName       String?
-  subtitle         String?
+  specialty        String?
   description      String?
-  highlightedText  String?
-  btn1Text         String?
-  btn2Text         String?
-  stat1Value       String?
-  stat1Label       String?
-  stat2Value       String?
-  stat2Label       String?
-  stat3Value       String?
-  stat3Label       String?
-  // FAQ
-  faqSectionLabel  String?
-  faqTitle         String?
-  faqs             Json?
+  whatsappUrl      String?
+  facebookUrl      String?
+  instagramUrl     String?
+  facialTreatments Json?
+  bodyTreatments   Json?
+  officeLinks      Json?
+  legalLinks       Json?
+  copyrightText    String?
+  designedByText   String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
 
-model PromoBanner {
-  id             String   @id @default(uuid())
-  singleton      Boolean  @unique @default(true)
-  tag            String?
-  title          String?
+model Home {
+  id              String   @id @default(uuid())
+  singleton       Boolean  @unique @default(true)
+  // Hero
+  specialties     String?
+  doctorName      String?
+  subtitle        String?
+  description     String?
   highlightedText String?
-  description    String?
-  doctorName     String?
-  location       String?
-  whatsappText   String?
-  whatsappUrl    String?
-  dismissText    String?
-  imageUrl       String?
-  active         Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  btn1Text        String?
+  btn2Text        String?
+  stat1Value      String?
+  stat1Label      String?
+  stat2Value      String?
+  stat2Label      String?
+  stat3Value      String?
+  stat3Label      String?
+  // FAQ
+  faqSectionLabel String?
+  faqTitle        String?
+  faqs            Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PromoBanner {
+  id              String   @id @default(uuid())
+  singleton       Boolean  @unique @default(true)
+  tag             String?
+  title           String?
+  highlightedText String?
+  description     String?
+  doctorName      String?
+  location        String?
+  whatsappText    String?
+  whatsappUrl     String?
+  dismissText     String?
+  imageUrl        String?
+  active          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model RateLimit {
-  ipHash  String   @id @db.VarChar(64) @map("ip_hash")
-  count   Int      @db.SmallInt @default(1)
+  ipHash  String   @id @map("ip_hash") @db.VarChar(64)
+  count   Int      @default(1) @db.SmallInt
   resetAt DateTime @map("reset_at")
 
   @@map("rate_limits")
@@ -185,22 +187,22 @@ enum ReviewInviteStatus {
 
 model Review {
   id              String       @id @default(uuid())
-  patientName     String       @db.VarChar(100) @map("patient_name")
-  patientLastname String?      @db.VarChar(100) @map("patient_lastname")
+  patientName     String       @map("patient_name") @db.VarChar(100)
+  patientLastname String?      @map("patient_lastname") @db.VarChar(100)
   treatment       String?      @db.VarChar(150)
   body            String
   rating          Int          @db.SmallInt
   status          ReviewStatus @default(pending)
-  ipHash          String?      @db.VarChar(64) @map("ip_hash")
+  ipHash          String?      @map("ip_hash") @db.VarChar(64)
   inviteId        String?      @map("invite_id")
   createdAt       DateTime     @default(now()) @map("created_at")
   approvedAt      DateTime?    @map("approved_at")
   deletedAt       DateTime?    @map("deleted_at")
 
   // Invitación de la que nació esta reseña (reviews.invite_id → review_invites.id)
-  originInvite  ReviewInvite? @relation("ReviewOrigin", fields: [inviteId], references: [id], onDelete: SetNull)
+  originInvite ReviewInvite? @relation("ReviewOrigin", fields: [inviteId], references: [id], onDelete: SetNull)
   // Invitación que apunta a esta reseña vía review_invites.review_id
-  resultInvite  ReviewInvite? @relation("InviteResult")
+  resultInvite ReviewInvite? @relation("InviteResult")
 
   @@index([status])
   @@index([createdAt(sort: Desc)])
@@ -212,8 +214,8 @@ model Review {
 model ReviewInvite {
   id              String             @id @default(uuid())
   token           String             @unique @db.VarChar(64)
-  patientName     String             @db.VarChar(100) @map("patient_name")
-  patientLastname String             @db.VarChar(100) @map("patient_lastname")
+  patientName     String             @map("patient_name") @db.VarChar(100)
+  patientLastname String             @map("patient_lastname") @db.VarChar(100)
   email           String?            @db.VarChar(150)
   phone           String?            @db.VarChar(20)
   status          ReviewInviteStatus @default(pending)
@@ -223,9 +225,9 @@ model ReviewInvite {
   usedAt          DateTime?          @map("used_at")
 
   // Reseña creada a partir de esta invitación (review_invites.review_id → reviews.id)
-  review          Review?  @relation("InviteResult", fields: [reviewId], references: [id], onDelete: SetNull)
+  review         Review?  @relation("InviteResult", fields: [reviewId], references: [id], onDelete: SetNull)
   // Reseñas que nacieron de esta invitación (back-relation de Review.originInvite)
-  createdReviews  Review[] @relation("ReviewOrigin")
+  createdReviews Review[] @relation("ReviewOrigin")
 
   @@index([status])
   @@index([createdAt(sort: Desc)])

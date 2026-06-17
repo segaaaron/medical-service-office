@@ -441,6 +441,33 @@ const upsertContactSchema = {
       out.locationDescription = data.locationDescription.trim();
     }
 
+    // Coordenadas del mapa (opcionales)
+    if (data.latitude !== undefined && data.latitude !== null && data.latitude !== '') {
+      const lat = Number(data.latitude);
+      if (!isNumber(lat) || lat < -90 || lat > 90) {
+        errors.push(err('latitude', 'La latitud debe ser un número entre -90 y 90'));
+      } else {
+        out.latitude = lat;
+      }
+    }
+
+    if (data.longitude !== undefined && data.longitude !== null && data.longitude !== '') {
+      const lng = Number(data.longitude);
+      if (!isNumber(lng) || lng < -180 || lng > 180) {
+        errors.push(err('longitude', 'La longitud debe ser un número entre -180 y 180'));
+      } else {
+        out.longitude = lng;
+      }
+    }
+
+    if (data.mapsUrl !== undefined && data.mapsUrl !== null && data.mapsUrl !== '') {
+      if (!isString(data.mapsUrl) || !URL_RE.test(data.mapsUrl.trim())) {
+        errors.push(err('mapsUrl', 'El enlace de Maps debe ser una URL válida'));
+      } else {
+        out.mapsUrl = data.mapsUrl.trim();
+      }
+    }
+
     return errors.length ? { success: false, errors } : { success: true, data: out };
   },
 };

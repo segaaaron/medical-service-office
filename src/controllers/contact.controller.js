@@ -17,6 +17,7 @@ async function upsertContact(req, res, next) {
     facebookName, facebookUrl,
     mondayFridayHours, saturdayHours, sundayStatus,
     locationDescription,
+    latitude, longitude, mapsUrl,
   } = req.body;
 
   const data = {
@@ -25,6 +26,7 @@ async function upsertContact(req, res, next) {
     facebookName, facebookUrl,
     mondayFridayHours, saturdayHours, sundayStatus,
     locationDescription,
+    latitude, longitude, mapsUrl,
   };
 
   try {
