@@ -195,6 +195,9 @@ function toUploadsPath(value) {
       return null;
     }
   }
+  // El front sirve las imágenes conservadas vía proxy /api/uploads/<archivo>
+  // (evita bloqueo CORP en el navegador). Normalizar de vuelta a /uploads/.
+  if (pathname.startsWith('/api/uploads/')) pathname = pathname.slice(4);
   return pathname.startsWith('/uploads/') ? pathname : null;
 }
 

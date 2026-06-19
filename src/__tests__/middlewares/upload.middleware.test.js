@@ -63,6 +63,11 @@ describe('toUploadsPath (normalización de URL conservada)', () => {
     expect(toUploadsPath('https://service.example.cloud/uploads/a.webp')).toBe('/uploads/a.webp');
   });
 
+  test('normaliza prefijo proxy /api/uploads/ del front', () => {
+    expect(toUploadsPath('/api/uploads/a.webp')).toBe('/uploads/a.webp');
+    expect(toUploadsPath('https://service.example.cloud/api/uploads/a.webp')).toBe('/uploads/a.webp');
+  });
+
   test('rechaza rutas fuera de /uploads/ (anti path-traversal/SSRF)', () => {
     expect(toUploadsPath('/etc/passwd')).toBeNull();
     expect(toUploadsPath('https://evil.com/x.webp')).toBeNull();
