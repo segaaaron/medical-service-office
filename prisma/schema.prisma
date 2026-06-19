@@ -44,6 +44,8 @@ model Treatment {
   price       Float?
   tag         String?
   imageUrl    String?
+  beforeImageUrl String? @map("before_image_url")
+  afterImageUrl  String? @map("after_image_url")
   active      Boolean  @default(false)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
@@ -262,4 +264,29 @@ model AboutUs {
   feature4Description    String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
+}
+
+// Registro de errores de backend para debugging. Captura solo 5xx.
+// El payload (body/query/params) se almacena SANITIZADO: campos PII redactados.
+model ErrorLog {
+  id         String   @id @default(uuid())
+  statusCode Int      @map("status_code") @db.SmallInt
+  name       String?  @db.VarChar(100)
+  code       String?  @db.VarChar(50)
+  message    String?
+  stack      String?
+  method     String   @db.VarChar(10)
+  path       String
+  route      String?  @db.VarChar(255)
+  body       Json?
+  query      Json?
+  params     Json?
+  ipHash     String?  @map("ip_hash") @db.VarChar(64)
+  userId     String?  @map("user_id") @db.VarChar(64)
+  requestId  String?  @map("request_id") @db.VarChar(64)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt(sort: Desc)])
+  @@index([statusCode, createdAt(sort: Desc)])
+  @@map("error_logs")
 }

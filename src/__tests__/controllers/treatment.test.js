@@ -7,7 +7,7 @@ jest.mock('../../services/prisma.service', () => ({
     delete: jest.fn(),
     count: jest.fn(),
   },
-  $transaction: jest.fn(),
+  $executeRaw: jest.fn(),
 }));
 jest.mock('../../middlewares/upload.middleware', () => ({
   deleteUploadedFile: jest.fn(),
@@ -24,13 +24,51 @@ const TREATMENT = { id: 'tid-1', name: 'Botox', slug: 'botox', active: true, ima
 
 describe('treatment.controller', () => {
   describe('listTreatments', () => {
-    it('returns paginated treatments', async () => {
+    it('returns a full array when no page param (sitemap/SSG/reorder)', async () => {
       prisma.treatment.findMany.mockResolvedValue([TREATMENT]);
-      prisma.treatment.count.mockResolvedValue(1);
       const req = mockReq({ query: {} });
       const res = mockRes();
       await listTreatments(req, res, mockNext());
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ data: [TREATMENT], total: 1 }));
+      expect(res.json).toHaveBeenCalledWith([TREATMENT]);
+      // sin page → NO se hace count
+      expect(prisma.treatment.count).not.toHaveBeenCalled();
+    });
+
+    it('returns a full array with ?all=true (even if page also present)', async () => {
+      prisma.treatment.findMany.mockResolvedValue([TREATMENT]);
+      const req = mockReq({ query: { all: 'true', page: '2' } });
+      const res = mockRes();
+      await listTreatments(req, res, mockNext());
+      expect(res.json).toHaveBeenCalledWith([TREATMENT]);
+      expect(prisma.treatment.count).not.toHaveBeenCalled();
+    });
+
+    it('returns a paginated object with backend limit=8 when page is present', async () => {
+      prisma.treatment.findMany.mockResolvedValue([TREATMENT]);
+      prisma.treatment.count.mockResolvedValue(20);
+      const req = mockReq({ query: { page: '2' } });
+      const res = mockRes();
+      await listTreatments(req, res, mockNext());
+      expect(prisma.treatment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 8, take: 8 })
+      );
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        data: [TREATMENT], total: 20, page: 2, limit: 8, totalPages: 3,
+      }));
+    });
+
+    it('non-admin only sees active; admin sees all', async () => {
+      prisma.treatment.findMany.mockResolvedValue([]);
+      const pub = mockReq({ query: {} });
+      await listTreatments(pub, mockRes(), mockNext());
+      expect(prisma.treatment.findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: { active: true } })
+      );
+      const admin = mockReq({ query: {}, user: { role: 'ADMIN' } });
+      await listTreatments(admin, mockRes(), mockNext());
+      expect(prisma.treatment.findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: {} })
+      );
     });
   });
 
@@ -85,6 +123,28 @@ describe('treatment.controller', () => {
       const createCall = prisma.treatment.create.mock.calls[0][0];
       expect(createCall.data.active).toBe(false);
     });
+
+    it('persists before/after image urls when provided', async () => {
+      prisma.treatment.create.mockResolvedValue(TREATMENT);
+      const req = mockReq({ body: {
+        name: 'Nuevo',
+        beforeImageUrl: '/uploads/b.webp',
+        afterImageUrl: '/uploads/a.webp',
+      } });
+      await createTreatment(req, mockRes(), mockNext());
+      const { data } = prisma.treatment.create.mock.calls[0][0];
+      expect(data.beforeImageUrl).toBe('/uploads/b.webp');
+      expect(data.afterImageUrl).toBe('/uploads/a.webp');
+    });
+
+    it('defaults before/after to null when absent', async () => {
+      prisma.treatment.create.mockResolvedValue(TREATMENT);
+      const req = mockReq({ body: { name: 'Nuevo' } });
+      await createTreatment(req, mockRes(), mockNext());
+      const { data } = prisma.treatment.create.mock.calls[0][0];
+      expect(data.beforeImageUrl).toBeNull();
+      expect(data.afterImageUrl).toBeNull();
+    });
   });
 
   describe('updateTreatment', () => {
@@ -99,10 +159,30 @@ describe('treatment.controller', () => {
     it('deletes old image when new image uploaded', async () => {
       prisma.treatment.findUnique.mockResolvedValue(TREATMENT);
       prisma.treatment.update.mockResolvedValue(TREATMENT);
-      const req = mockReq({ params: { id: 'tid-1' }, body: {}, imageUrl: '/uploads/new.webp' });
+      const req = mockReq({ params: { id: 'tid-1' }, body: { imageUrl: '/uploads/new.webp' } });
       const res = mockRes();
       await updateTreatment(req, res, mockNext());
       expect(deleteUploadedFile).toHaveBeenCalledWith(TREATMENT.imageUrl);
+    });
+
+    it('removes before image (null) and deletes old file', async () => {
+      const cur = { ...TREATMENT, beforeImageUrl: '/uploads/old-b.webp' };
+      prisma.treatment.findUnique.mockResolvedValue(cur);
+      prisma.treatment.update.mockResolvedValue(cur);
+      const req = mockReq({ params: { id: 'tid-1' }, body: { beforeImageUrl: null } });
+      await updateTreatment(req, mockRes(), mockNext());
+      expect(deleteUploadedFile).toHaveBeenCalledWith('/uploads/old-b.webp');
+      expect(prisma.treatment.update.mock.calls[0][0].data.beforeImageUrl).toBeNull();
+    });
+
+    it('does not touch before/after when fields absent', async () => {
+      prisma.treatment.findUnique.mockResolvedValue(TREATMENT);
+      prisma.treatment.update.mockResolvedValue(TREATMENT);
+      const req = mockReq({ params: { id: 'tid-1' }, body: { name: 'X' } });
+      await updateTreatment(req, mockRes(), mockNext());
+      const { data } = prisma.treatment.update.mock.calls[0][0];
+      expect('beforeImageUrl' in data).toBe(false);
+      expect('afterImageUrl' in data).toBe(false);
     });
 
     it('returns 409 on P2002', async () => {
@@ -124,7 +204,7 @@ describe('treatment.controller', () => {
     beforeEach(() => {
       jest.clearAllMocks();
       prisma.treatment.update.mockResolvedValue({});
-      prisma.$transaction.mockImplementation((ops) => Promise.all(ops));
+      prisma.$executeRaw.mockResolvedValue(2);
     });
 
     it('returns 400 when body is not an array', async () => {
@@ -176,20 +256,23 @@ describe('treatment.controller', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it('returns 404 on P2025 from transaction', async () => {
-      prisma.$transaction.mockRejectedValue(Object.assign(new Error(), { code: 'P2025' }));
+    it('passes DB errors to next', async () => {
+      const dbErr = new Error('db down');
+      prisma.$executeRaw.mockRejectedValue(dbErr);
       const req = mockReq({ body: VALID_ITEMS });
       const res = mockRes();
-      await reorderTreatments(req, res, mockNext());
-      expect(res.status).toHaveBeenCalledWith(404);
+      const next = mockNext();
+      await reorderTreatments(req, res, next);
+      expect(next).toHaveBeenCalledWith(dbErr);
     });
 
     it('returns { ok: true } on success', async () => {
-      prisma.$transaction.mockResolvedValue([]);
+      prisma.$executeRaw.mockResolvedValue(2);
       const req = mockReq({ body: VALID_ITEMS });
       const res = mockRes();
       await reorderTreatments(req, res, mockNext());
       expect(res.json).toHaveBeenCalledWith({ ok: true });
+      expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
     });
   });
 

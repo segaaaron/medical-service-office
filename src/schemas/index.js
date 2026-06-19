@@ -132,6 +132,17 @@ const createTreatmentSchema = {
       out.imageUrl = data.imageUrl ?? null;
     }
 
+    for (const field of ['beforeImageUrl', 'afterImageUrl']) {
+      if (data[field] === undefined) continue;
+      if (data[field] === null || data[field] === '') {
+        out[field] = null;
+      } else if (!isString(data[field]) || !UPLOAD_URL_RE.test(data[field])) {
+        errors.push(err(field, `${field} debe ser una ruta de /uploads/`));
+      } else {
+        out[field] = data[field];
+      }
+    }
+
     if (data.active !== undefined) {
       if (data.active === true || data.active === 'true') {
         out.active = true;
@@ -200,6 +211,17 @@ const updateTreatmentSchema = {
         errors.push(err('imageUrl', 'imageUrl debe ser una ruta de /uploads/'));
       } else {
         out.imageUrl = data.imageUrl;
+      }
+    }
+
+    for (const field of ['beforeImageUrl', 'afterImageUrl']) {
+      if (data[field] === undefined) continue;
+      if (data[field] === null || data[field] === '') {
+        out[field] = null;
+      } else if (!isString(data[field]) || !UPLOAD_URL_RE.test(data[field])) {
+        errors.push(err(field, `${field} debe ser una ruta de /uploads/`));
+      } else {
+        out[field] = data[field];
       }
     }
 

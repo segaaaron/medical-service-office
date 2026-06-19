@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/requireRole.middleware');
-const { upload, compressAndSave, mergeImageUrl, deleteUploadedFile } = require('../middlewares/upload.middleware');
+const { uploadTreatmentImages, compressTreatmentImages, deleteUploadedFile } = require('../middlewares/upload.middleware');
 const {
   listTreatments,
   getTreatment,
@@ -15,7 +15,10 @@ const { createTreatmentSchema, updateTreatmentSchema } = require('../schemas/ind
 
 function cleanupOnError(req, res, next) {
   res.on('finish', () => {
-    if (res.statusCode >= 400 && req.imageUrl) deleteUploadedFile(req.imageUrl);
+    if (res.statusCode >= 400) {
+      const urls = req.uploadedUrls || (req.imageUrl ? [req.imageUrl] : []);
+      urls.forEach(deleteUploadedFile);
+    }
   });
   next();
 }
@@ -26,8 +29,8 @@ router.get('/', optionalAuthenticate, listTreatments);
 router.get('/:id', getTreatment);
 
 router.patch('/reorder', authenticate, requireRole('ADMIN'), reorderTreatments);
-router.post('/', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, cleanupOnError, validate(createTreatmentSchema), createTreatment);
-router.put('/:id', authenticate, requireRole('ADMIN'), upload.single('image'), compressAndSave, mergeImageUrl, cleanupOnError, validate(updateTreatmentSchema), updateTreatment);
+router.post('/', authenticate, requireRole('ADMIN'), uploadTreatmentImages, compressTreatmentImages, cleanupOnError, validate(createTreatmentSchema), createTreatment);
+router.put('/:id', authenticate, requireRole('ADMIN'), uploadTreatmentImages, compressTreatmentImages, cleanupOnError, validate(updateTreatmentSchema), updateTreatment);
 router.delete('/:id', authenticate, requireRole('ADMIN'), deleteTreatment);
 
 module.exports = router;

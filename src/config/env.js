@@ -30,5 +30,6 @@ module.exports = {
   PAGINATION_DEFAULT_LIMIT: parseInt(process.env.PAGINATION_DEFAULT_LIMIT) || 20,
   PAGINATION_MAX_LIMIT: parseInt(process.env.PAGINATION_MAX_LIMIT) || 100,
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+  ERROR_LOG_RETENTION_DAYS: parseInt(process.env.ERROR_LOG_RETENTION_DAYS) || 30,
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173',
 };

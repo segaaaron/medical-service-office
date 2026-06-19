@@ -10,6 +10,7 @@ const footerRoutes = require('./footer.routes');
 const homeRoutes = require('./home.routes');
 const promoBannerRoutes = require('./promo-banner.routes');
 const reviewsRoutes = require('./reviews.routes');
+const logsRoutes = require('./logs.routes');
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/footer', footerRoutes);
 router.use('/home', homeRoutes);
 router.use('/promo-banner', promoBannerRoutes);
 router.use('/reviews', reviewsRoutes);
+router.use('/logs', logsRoutes);
 
 module.exports = router;

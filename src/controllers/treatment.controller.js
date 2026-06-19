@@ -2,20 +2,37 @@ const { Prisma } = require('@prisma/client');
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
-const { parsePagination } = require('../utils/pagination');
+
+// Tamaño de página fijado por el backend (el frontend no lo envía).
+const TREATMENT_PAGE_SIZE = 8;
+// Orden determinístico para que no se repitan/falten items entre páginas.
+const TREATMENT_ORDER_BY = [{ order: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }];
 
 async function listTreatments(req, res, next) {
   try {
-    const { page, limit, skip } = parsePagination(req.query);
     const isAdmin = req.user?.role === 'ADMIN';
     const where = isAdmin ? {} : { active: true };
 
-    const [treatments, total] = await Promise.all([
-      prisma.treatment.findMany({ where, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }], skip, take: limit }),
+    // Array completo cuando: `?all=true` (opción "All" de la vista) o sin `page`
+    // (back-compat: sitemap, SSG y el modo reordenar del dashboard lo necesitan).
+    // `all=true` tiene precedencia sobre `page`.
+    const wantAll = req.query.all === 'true' || req.query.all === true;
+    if (wantAll || req.query.page === undefined) {
+      const treatments = await prisma.treatment.findMany({ where, orderBy: TREATMENT_ORDER_BY });
+      return res.json(treatments);
+    }
+
+    // CON `page` → objeto paginado. limit lo fija el backend (8).
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = TREATMENT_PAGE_SIZE;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      prisma.treatment.findMany({ where, orderBy: TREATMENT_ORDER_BY, skip, take: limit }),
       prisma.treatment.count({ where }),
     ]);
 
-    return res.json({ data: treatments, total, page, limit, totalPages: Math.ceil(total / limit) });
+    return res.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }
@@ -36,7 +53,9 @@ async function getTreatment(req, res, next) {
 async function createTreatment(req, res, next) {
   try {
     const { name, description, price, tag, active } = req.body;
-    const imageUrl = req.imageUrl ?? req.body.imageUrl ?? null;
+    const imageUrl = req.body.imageUrl ?? null;
+    const beforeImageUrl = req.body.beforeImageUrl ?? null;
+    const afterImageUrl = req.body.afterImageUrl ?? null;
 
     const slug = toSlug(name);
     if (!slug) return res.status(400).json({ error: 'El nombre debe contener al menos un carácter alfanumérico' });
@@ -49,6 +68,8 @@ async function createTreatment(req, res, next) {
         price: price ?? null,
         tag: tag ?? null,
         imageUrl: imageUrl || null,
+        beforeImageUrl: beforeImageUrl || null,
+        afterImageUrl: afterImageUrl || null,
         active: active ?? false,
       },
     });
@@ -61,10 +82,23 @@ async function createTreatment(req, res, next) {
   }
 }
 
+// Aplica la actualización de un campo de imagen con semántica file/""/ausente.
+// newVal: undefined = no tocar · null/"" = borrar (y eliminar archivo previo) ·
+// string = reemplazar (y eliminar el archivo anterior si difería).
+function applyImageUpdate(data, field, newVal, current) {
+  if (newVal === undefined) return;
+  if (newVal === null || newVal === '') {
+    if (current[field]) deleteUploadedFile(current[field]);
+    data[field] = null;
+  } else {
+    if (current[field] && newVal !== current[field]) deleteUploadedFile(current[field]);
+    data[field] = newVal;
+  }
+}
+
 async function updateTreatment(req, res, next) {
   try {
     const { name, description, price, tag, active } = req.body;
-    const imageUrl = req.imageUrl ?? req.body.imageUrl ?? undefined;
     const data = {};
 
     const current = await prisma.treatment.findUnique({ where: { id: req.params.id } });
@@ -77,14 +111,11 @@ async function updateTreatment(req, res, next) {
     if (description !== undefined) data.description = description === '' ? null : description;
     if (price !== undefined) data.price = price === '' ? null : price;
     if (tag !== undefined) data.tag = (tag === '' || tag == null) ? null : tag;
-    if (imageUrl !== undefined) {
-      if (imageUrl === null) {
-        if (current.imageUrl) deleteUploadedFile(current.imageUrl);
-      } else if (imageUrl && current.imageUrl && imageUrl !== current.imageUrl) {
-        deleteUploadedFile(current.imageUrl);
-      }
-      data.imageUrl = imageUrl || null;
-    }
+
+    applyImageUpdate(data, 'imageUrl', req.body.imageUrl, current);
+    applyImageUpdate(data, 'beforeImageUrl', req.body.beforeImageUrl, current);
+    applyImageUpdate(data, 'afterImageUrl', req.body.afterImageUrl, current);
+
     if (active !== undefined) data.active = active;
 
     const treatment = await prisma.treatment.update({
@@ -102,7 +133,11 @@ async function updateTreatment(req, res, next) {
 async function deleteTreatment(req, res, next) {
   try {
     const treatment = await prisma.treatment.findUnique({ where: { id: req.params.id } });
-    if (treatment) deleteUploadedFile(treatment.imageUrl);
+    if (treatment) {
+      deleteUploadedFile(treatment.imageUrl);
+      deleteUploadedFile(treatment.beforeImageUrl);
+      deleteUploadedFile(treatment.afterImageUrl);
+    }
     await prisma.treatment.delete({ where: { id: req.params.id } });
     return res.status(204).send();
   } catch (err) {
@@ -145,7 +180,7 @@ async function reorderTreatments(req, res, next) {
       UPDATE "Treatment" AS t
       SET "order" = c.ord::int
       FROM (VALUES ${Prisma.join(
-        items.map(i => Prisma.sql`(${i.id}::uuid, ${i.order}::int)`)
+        items.map(i => Prisma.sql`(${i.id}::text, ${i.order}::int)`)
       )}) AS c(id, ord)
       WHERE t.id = c.id
     `;

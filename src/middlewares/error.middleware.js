@@ -1,6 +1,7 @@
 const isProduction = process.env.NODE_ENV === 'production';
 const { UPLOAD_MAX_SIZE_MB } = require('../config/env');
 const logger = require('../config/logger');
+const { recordError } = require('../services/errorLog.service');
 
 function errorMiddleware(err, req, res, next) {
   if (err.code === 'LIMIT_FILE_SIZE') {
@@ -28,6 +29,8 @@ function errorMiddleware(err, req, res, next) {
   const status = err.status || err.statusCode || 500;
   if (status >= 500) {
     logger.error({ err, method: req.method, url: req.originalUrl, ip: req.ip }, 'Unhandled server error');
+    // Persistencia para debugging — fire-and-forget, jamás bloquea ni lanza.
+    recordError(err, req, status);
   }
   const message = isProduction && status === 500
     ? 'Ocurrió un error inesperado. Por favor intenta de nuevo más tarde.'
