@@ -596,7 +596,7 @@ const upsertFooterSchema = {
 // upsertPromoBannerSchema
 // ---------------------------------------------------------------------------
 const PROMO_BANNER_STRING_FIELDS = [
-  'tag', 'title', 'highlightedText', 'description',
+  'tag', 'badges', 'title', 'highlightedText', 'description',
   'doctorName', 'location', 'whatsappText', 'whatsappUrl',
   'dismissText',
 ];

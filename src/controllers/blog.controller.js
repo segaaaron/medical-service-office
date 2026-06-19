@@ -1,26 +1,41 @@
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
-const { parsePagination } = require('../utils/pagination');
+
+// Tamaño de página fijado por el backend (el frontend no lo envía).
+const BLOG_PAGE_SIZE = 20;
+// Orden determinístico para que no se repitan/falten posts entre páginas.
+const BLOG_ORDER_BY = [{ publishedAt: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }];
+
+const BLOG_SELECT = {
+  id: true, title: true, slug: true, excerpt: true,
+  content: true, imageUrl: true, published: true,
+  publishedAt: true, createdAt: true,
+};
 
 async function listPosts(req, res, next) {
   try {
-    const { page, limit, skip } = parsePagination(req.query);
     const isAdmin = req.user?.role === 'ADMIN';
     const where = isAdmin ? {} : { published: true };
 
-    const select = {
-      id: true, title: true, slug: true, excerpt: true,
-      content: true, imageUrl: true, published: true,
-      publishedAt: true, createdAt: true,
-    };
+    // SIN `page` → array completo. Lo consumen la web pública /blog y el fallback
+    // estático. NO paginar aquí.
+    if (req.query.page === undefined) {
+      const posts = await prisma.blogPost.findMany({ where, orderBy: BLOG_ORDER_BY, select: BLOG_SELECT });
+      return res.json(posts);
+    }
 
-    const [posts, total] = await Promise.all([
-      prisma.blogPost.findMany({ where, orderBy: { createdAt: 'desc' }, select, skip, take: limit }),
+    // CON `page` → objeto paginado. limit lo fija el backend.
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = BLOG_PAGE_SIZE;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      prisma.blogPost.findMany({ where, orderBy: BLOG_ORDER_BY, select: BLOG_SELECT, skip, take: limit }),
       prisma.blogPost.count({ where }),
     ]);
 
-    return res.json({ data: posts, total, page, limit, totalPages: Math.ceil(total / limit) });
+    return res.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     next(err);
   }

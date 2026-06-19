@@ -21,13 +21,39 @@ const POST = { id: 'pid-1', title: 'Mi Post', slug: 'mi-post', content: 'Conteni
 
 describe('blog.controller', () => {
   describe('listPosts', () => {
-    it('returns paginated posts', async () => {
+    it('returns a full array when no page param (public /blog + fallback)', async () => {
       prisma.blogPost.findMany.mockResolvedValue([POST]);
-      prisma.blogPost.count.mockResolvedValue(1);
       const req = mockReq({ query: {} });
       const res = mockRes();
       await listPosts(req, res, mockNext());
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ data: [POST], total: 1 }));
+      expect(res.json).toHaveBeenCalledWith([POST]);
+      expect(prisma.blogPost.count).not.toHaveBeenCalled();
+    });
+
+    it('returns a paginated object when page is present', async () => {
+      prisma.blogPost.findMany.mockResolvedValue([POST]);
+      prisma.blogPost.count.mockResolvedValue(45);
+      const req = mockReq({ query: { page: '2' } });
+      const res = mockRes();
+      await listPosts(req, res, mockNext());
+      expect(prisma.blogPost.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 20, take: 20 })
+      );
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        data: [POST], total: 45, page: 2, limit: 20, totalPages: 3,
+      }));
+    });
+
+    it('non-admin only sees published; admin sees all', async () => {
+      prisma.blogPost.findMany.mockResolvedValue([]);
+      await listPosts(mockReq({ query: {} }), mockRes(), mockNext());
+      expect(prisma.blogPost.findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: { published: true } })
+      );
+      await listPosts(mockReq({ query: {}, user: { role: 'ADMIN' } }), mockRes(), mockNext());
+      expect(prisma.blogPost.findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: {} })
+      );
     });
   });
 

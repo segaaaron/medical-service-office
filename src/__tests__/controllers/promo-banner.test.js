@@ -11,6 +11,7 @@ jest.mock('../../middlewares/upload.middleware', () => ({
 const prisma = require('../../services/prisma.service');
 const { deleteUploadedFile } = require('../../middlewares/upload.middleware');
 const { getPromoBanner, upsertPromoBanner } = require('../../controllers/promo-banner.controller');
+const { upsertPromoBannerSchema } = require('../../schemas/index');
 const { mockReq, mockRes, mockNext } = require('../helpers/mock-req-res');
 
 const RECORD = { id: '1', singleton: true, title: 'Promo', active: false, imageUrl: '/uploads/banner.webp' };
@@ -93,6 +94,28 @@ describe('promo-banner.controller', () => {
       const next = mockNext();
       await upsertPromoBanner(req, res, next);
       expect(next).toHaveBeenCalledWith(err);
+    });
+
+    it('persists badges field to upsert', async () => {
+      prisma.promoBanner.upsert.mockResolvedValue(RECORD);
+      const req = mockReq({ body: { badges: '10% DESCUENTO, OFERTA DEL MES' } });
+      await upsertPromoBanner(req, mockRes(), mockNext());
+      expect(prisma.promoBanner.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: expect.objectContaining({ badges: '10% DESCUENTO, OFERTA DEL MES' }) })
+      );
+    });
+  });
+
+  describe('upsertPromoBannerSchema', () => {
+    it('accepts badges as a string (not stripped by whitelist)', () => {
+      const r = upsertPromoBannerSchema.validate({ badges: '10% DESCUENTO, OFERTA DEL MES' });
+      expect(r.success).toBe(true);
+      expect(r.data.badges).toBe('10% DESCUENTO, OFERTA DEL MES');
+    });
+
+    it('rejects non-string badges', () => {
+      const r = upsertPromoBannerSchema.validate({ badges: 123 });
+      expect(r.success).toBe(false);
     });
   });
 });
