@@ -536,6 +536,20 @@ const upsertAboutUsSchema = {
       }
     }
 
+    // Galería "Nosotros": array ordenado de rutas /uploads/, máx 10.
+    // El middleware ya la reconstruyó por posición; aquí solo se valida.
+    if (data.gallery !== undefined) {
+      if (!Array.isArray(data.gallery)) {
+        errors.push(err('gallery', 'gallery debe ser un array'));
+      } else if (data.gallery.length > 10) {
+        errors.push(err('gallery', 'gallery admite máximo 10 imágenes'));
+      } else if (!data.gallery.every((u) => isString(u) && UPLOAD_URL_RE.test(u))) {
+        errors.push(err('gallery', 'cada elemento de gallery debe ser una ruta de /uploads/'));
+      } else {
+        out.gallery = data.gallery;
+      }
+    }
+
     if (Object.keys(out).length === 0 && errors.length === 0) {
       errors.push(err('body', 'Al menos un campo debe ser proporcionado'));
     }

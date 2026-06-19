@@ -244,6 +244,7 @@ model AboutUs {
   doctorName             String?
   descriptionDoc         String?
   imageUrl               String?
+  gallery                String[] @default([])
   experienceBadgeValue   String?
   experienceBadgeLabel   String?
   stat1Value             String?
