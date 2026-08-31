@@ -11,6 +11,7 @@ const homeRoutes = require('./home.routes');
 const promoBannerRoutes = require('./promo-banner.routes');
 const reviewsRoutes = require('./reviews.routes');
 const logsRoutes = require('./logs.routes');
+const adminRoutes = require('./admin.routes');
 
 const router = Router();
 
@@ -26,5 +27,7 @@ router.use('/home', homeRoutes);
 router.use('/promo-banner', promoBannerRoutes);
 router.use('/reviews', reviewsRoutes);
 router.use('/logs', logsRoutes);
+// Superficie de administración: lista completa, autenticación obligatoria.
+router.use('/admin', adminRoutes);
 
 module.exports = router;

@@ -17,6 +17,7 @@ const prisma = require('../../services/prisma.service');
 const { deleteUploadedFile } = require('../../middlewares/upload.middleware');
 const {
   listTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment, reorderTreatments,
+  listAllTreatments,
 } = require('../../controllers/treatment.controller');
 const { mockReq, mockRes, mockNext } = require('../helpers/mock-req-res');
 
@@ -98,12 +99,17 @@ describe('treatment.controller', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it('returns 409 on P2002 duplicate', async () => {
-      prisma.treatment.create.mockRejectedValue(Object.assign(new Error(), { code: 'P2002' }));
+    it('allows a repeated name: retries with a suffixed slug instead of failing', async () => {
+      const collision = Object.assign(new Error(), { code: 'P2002', meta: { target: ['slug'] } });
+      prisma.treatment.create
+        .mockRejectedValueOnce(collision)
+        .mockResolvedValue({ ...TREATMENT, slug: 'botox-2' });
       const req = mockReq({ body: { name: 'Botox' } });
       const res = mockRes();
       await createTreatment(req, res, mockNext());
-      expect(res.status).toHaveBeenCalledWith(409);
+      expect(prisma.treatment.create.mock.calls.map((c) => c[0].data.slug)).toEqual(['botox', 'botox-2']);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.status).not.toHaveBeenCalledWith(409);
     });
 
     it('creates treatment with 201', async () => {
@@ -185,13 +191,29 @@ describe('treatment.controller', () => {
       expect('afterImageUrl' in data).toBe(false);
     });
 
-    it('returns 409 on P2002', async () => {
+    it('renaming keeps the original slug: the public URL is not rewritten', async () => {
       prisma.treatment.findUnique.mockResolvedValue(TREATMENT);
-      prisma.treatment.update.mockRejectedValue(Object.assign(new Error(), { code: 'P2002' }));
-      const req = mockReq({ params: { id: 'tid-1' }, body: { name: 'Duplicado' } });
+      prisma.treatment.update.mockResolvedValue({ ...TREATMENT, name: 'Botox Premium' });
+      const req = mockReq({ params: { id: 'tid-1' }, body: { name: 'Botox Premium' } });
       const res = mockRes();
       await updateTreatment(req, res, mockNext());
-      expect(res.status).toHaveBeenCalledWith(409);
+      const call = prisma.treatment.update.mock.calls[0][0];
+      expect(call.where).toEqual({ id: 'tid-1' });
+      expect(call.data.name).toBe('Botox Premium');
+      expect('slug' in call.data).toBe(false);
+      expect(prisma.treatment.update).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('listAllTreatments (admin surface)', () => {
+    it('returns every treatment, inactive included, with no filter or pagination', async () => {
+      prisma.treatment.findMany.mockResolvedValue([TREATMENT]);
+      const res = mockRes();
+      await listAllTreatments(mockReq({ user: { role: 'ADMIN' }, query: { page: '2' } }), res, mockNext());
+      const call = prisma.treatment.findMany.mock.calls.at(-1)[0];
+      expect(call.where).toBeUndefined();
+      expect(call.take).toBeUndefined();
+      expect(res.json).toHaveBeenCalledWith([TREATMENT]);
     });
   });
 

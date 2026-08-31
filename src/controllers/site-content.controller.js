@@ -68,8 +68,9 @@ async function deleteSiteContent(req, res, next) {
     const { key } = req.params;
     const record = await prisma.siteContent.findUnique({ where: { key } });
     if (!record) return res.status(404).json({ error: 'Contenido no encontrado' });
-    if (record.value?.doctorImage) deleteUploadedFile(record.value.doctorImage);
     await prisma.siteContent.delete({ where: { key } });
+    // Después del borrado, nunca antes: si la fila no se va, la imagen tampoco.
+    if (record.value?.doctorImage) deleteUploadedFile(record.value.doctorImage);
     return res.status(204).send();
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Contenido no encontrado' });

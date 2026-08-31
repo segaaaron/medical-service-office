@@ -1,0 +1,15 @@
+-- Elimina la tabla de citas, retirada del producto hace tiempo.
+--
+-- El modelo `Appointment` ya no existe en schema.prisma, ningún código del
+-- backend la consulta y en producción tenía 0 filas. Solo quedaba la tabla.
+--
+-- Lo importante es lo que se lleva con ella: la clave foránea
+-- `Appointment_treatmentId_fkey` sobre "Treatment" con ON DELETE RESTRICT.
+-- Esa restricción seguía viva en la base de datos aunque Prisma ya no supiera
+-- de ella, y es el origen del error P2003 que el borrado de tratamientos aún
+-- contempla. Con la tabla vacía nunca llegó a dispararse; si algo hubiera
+-- escrito ahí, eliminar tratamientos habría empezado a fallar sin causa visible.
+--
+-- Si en el futuro se retoma la agenda de citas, se recrea con una migración
+-- nueva y un modelo pensado para entonces.
+DROP TABLE IF EXISTS "Appointment";

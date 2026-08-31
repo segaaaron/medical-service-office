@@ -1,6 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('../services/prisma.service');
 const { toSlug } = require('../utils/slug');
+const { createWithUniqueSlug } = require('../services/uniqueSlug.service');
 const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 // Tamaño de página fijado por el backend (el frontend no lo envía).
@@ -38,6 +39,22 @@ async function listTreatments(req, res, next) {
   }
 }
 
+/**
+ * Superficie de administración: SIEMPRE devuelve todos los tratamientos.
+ *
+ * Mismo motivo que en blog: `listTreatments` decide qué mostrar según haya token
+ * o no, así que una sesión caducada esconde los tratamientos desactivados sin
+ * avisar. Aquí ADMIN es obligatorio en la ruta y no hay paginación.
+ */
+async function listAllTreatments(req, res, next) {
+  try {
+    const treatments = await prisma.treatment.findMany({ orderBy: TREATMENT_ORDER_BY });
+    return res.json(treatments);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getTreatment(req, res, next) {
   try {
     const treatment = await prisma.treatment.findUnique({
@@ -60,10 +77,12 @@ async function createTreatment(req, res, next) {
     const slug = toSlug(name);
     if (!slug) return res.status(400).json({ error: 'El nombre debe contener al menos un carácter alfanumérico' });
 
-    const treatment = await prisma.treatment.create({
+    // Dos tratamientos pueden llamarse igual: el nombre no es una llave, el id
+    // sí. Solo la URL debe ser única, y de eso se encarga createWithUniqueSlug.
+    const treatment = await createWithUniqueSlug(slug, (uniqueSlug) => prisma.treatment.create({
       data: {
         name,
-        slug,
+        slug: uniqueSlug,
         description: description ?? null,
         price: price ?? null,
         tag: tag ?? null,
@@ -72,26 +91,26 @@ async function createTreatment(req, res, next) {
         afterImageUrl: afterImageUrl || null,
         active: active ?? false,
       },
-    });
+    }));
     return res.status(201).json(treatment);
   } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({ error: 'Ya existe un tratamiento con ese nombre' });
-    }
     next(err);
   }
 }
 
 // Aplica la actualización de un campo de imagen con semántica file/""/ausente.
-// newVal: undefined = no tocar · null/"" = borrar (y eliminar archivo previo) ·
-// string = reemplazar (y eliminar el archivo anterior si difería).
-function applyImageUpdate(data, field, newVal, current) {
+// newVal: undefined = no tocar · null/"" = borrar · string = reemplazar.
+//
+// No toca el disco: acumula en `filesToDelete` los archivos que quedarán sin
+// dueño y el llamador los borra cuando la actualización haya confirmado. Un
+// unlink no tiene rollback; un UPDATE sí.
+function applyImageUpdate(data, field, newVal, current, filesToDelete) {
   if (newVal === undefined) return;
   if (newVal === null || newVal === '') {
-    if (current[field]) deleteUploadedFile(current[field]);
+    if (current[field]) filesToDelete.push(current[field]);
     data[field] = null;
   } else {
-    if (current[field] && newVal !== current[field]) deleteUploadedFile(current[field]);
+    if (current[field] && newVal !== current[field]) filesToDelete.push(current[field]);
     data[field] = newVal;
   }
 }
@@ -104,41 +123,41 @@ async function updateTreatment(req, res, next) {
     const current = await prisma.treatment.findUnique({ where: { id: req.params.id } });
     if (!current) return res.status(404).json({ error: 'Tratamiento no encontrado' });
 
-    if (name !== undefined) {
-      data.name = name;
-      if (name !== current.name) data.slug = toSlug(name);
-    }
+    // El nombre se edita libremente; el SLUG NO SE TOCA (misma razón que en
+    // blog: es la dirección pública, no la identidad del registro).
+    if (name !== undefined) data.name = name;
     if (description !== undefined) data.description = description === '' ? null : description;
     if (price !== undefined) data.price = price === '' ? null : price;
     if (tag !== undefined) data.tag = (tag === '' || tag == null) ? null : tag;
 
-    applyImageUpdate(data, 'imageUrl', req.body.imageUrl, current);
-    applyImageUpdate(data, 'beforeImageUrl', req.body.beforeImageUrl, current);
-    applyImageUpdate(data, 'afterImageUrl', req.body.afterImageUrl, current);
+    const filesToDelete = [];
+    applyImageUpdate(data, 'imageUrl', req.body.imageUrl, current, filesToDelete);
+    applyImageUpdate(data, 'beforeImageUrl', req.body.beforeImageUrl, current, filesToDelete);
+    applyImageUpdate(data, 'afterImageUrl', req.body.afterImageUrl, current, filesToDelete);
 
     if (active !== undefined) data.active = active;
 
-    const treatment = await prisma.treatment.update({
-      where: { id: req.params.id },
-      data,
-    });
+    // Sin slug en `data` la escritura no puede chocar con el índice UNIQUE.
+    const treatment = await prisma.treatment.update({ where: { id: req.params.id }, data });
+
+    filesToDelete.forEach((file) => deleteUploadedFile(file));
     return res.json(treatment);
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Tratamiento no encontrado' });
-    if (err.code === 'P2002') return res.status(409).json({ error: 'Ya existe un tratamiento con ese nombre' });
     next(err);
   }
 }
 
 async function deleteTreatment(req, res, next) {
   try {
-    const treatment = await prisma.treatment.findUnique({ where: { id: req.params.id } });
-    if (treatment) {
-      deleteUploadedFile(treatment.imageUrl);
-      deleteUploadedFile(treatment.beforeImageUrl);
-      deleteUploadedFile(treatment.afterImageUrl);
-    }
-    await prisma.treatment.delete({ where: { id: req.params.id } });
+    // `delete` devuelve la fila borrada: una query en vez de dos, y las imágenes
+    // se van solo si la fila se fue. El caso P2003 de más abajo — el tratamiento
+    // está referenciado y no se puede borrar — dejaba antes sus tres imágenes
+    // destruidas mientras el registro seguía vivo en pantalla.
+    const treatment = await prisma.treatment.delete({ where: { id: req.params.id } });
+    deleteUploadedFile(treatment.imageUrl);
+    deleteUploadedFile(treatment.beforeImageUrl);
+    deleteUploadedFile(treatment.afterImageUrl);
     return res.status(204).send();
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Tratamiento no encontrado' });
@@ -191,4 +210,4 @@ async function reorderTreatments(req, res, next) {
   }
 }
 
-module.exports = { listTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment, reorderTreatments };
+module.exports = { listTreatments, listAllTreatments, getTreatment, createTreatment, updateTreatment, deleteTreatment, reorderTreatments };

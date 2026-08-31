@@ -117,6 +117,24 @@ async function listInvites(req, res, next) {
   }
 }
 
+/**
+ * GET /api/admin/invites — superficie de administración.
+ *
+ * Todas las invitaciones, en cualquier estado y sin tope. Se sigue marcando lo
+ * vencido antes de listar para que los estados que se ven sean los reales.
+ */
+async function listAllInvites(req, res, next) {
+  try {
+    await expireStale(new Date());
+    const invites = await prisma.reviewInvite.findMany({
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    });
+    return res.json({ invites: invites.map(toAdminInvite) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // DELETE /api/reviews/invites/:id — admin (revoke)
 async function revokeInvite(req, res, next) {
   try {
@@ -267,6 +285,7 @@ module.exports = {
   createInvite,
   createInviteBot,
   listInvites,
+  listAllInvites,
   revokeInvite,
   validateInvite,
   submitInvite,

@@ -167,14 +167,6 @@ model PromoBanner {
   updatedAt       DateTime @updatedAt
 }
 
-model RateLimit {
-  ipHash  String   @id @map("ip_hash") @db.VarChar(64)
-  count   Int      @default(1) @db.SmallInt
-  resetAt DateTime @map("reset_at")
-
-  @@map("rate_limits")
-}
-
 enum ReviewStatus {
   pending
   approved

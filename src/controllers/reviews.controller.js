@@ -96,6 +96,26 @@ async function listAdminReviews(req, res, next) {
   }
 }
 
+/**
+ * GET /api/admin/reviews — superficie de administración.
+ *
+ * Devuelve TODAS las reseñas: pendientes, aprobadas y eliminadas, sin tope de
+ * filas. `listAdminReviews` esconde las eliminadas salvo que se pidan y corta
+ * en 500 sin decirlo; el panel es la herramienta del administrador y ahí no se
+ * oculta nada. Qué mostrar y cómo agruparlo es decisión de la interfaz, no del
+ * backend: aquí sale el dato completo y cada reseña lleva su `status`.
+ */
+async function listAllReviews(req, res, next) {
+  try {
+    const reviews = await prisma.review.findMany({
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    });
+    return res.json({ reviews: reviews.map(toAdminReview) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // GET /api/reviews/stats — admin
 async function getStats(req, res, next) {
   try {
@@ -160,6 +180,7 @@ async function deleteReview(req, res, next) {
 module.exports = {
   listPublicReviews,
   listAdminReviews,
+  listAllReviews,
   getStats,
   approveReview,
   deleteReview,

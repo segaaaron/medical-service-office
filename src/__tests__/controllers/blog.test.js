@@ -14,7 +14,7 @@ jest.mock('../../middlewares/upload.middleware', () => ({
 
 const prisma = require('../../services/prisma.service');
 const { deleteUploadedFile } = require('../../middlewares/upload.middleware');
-const { listPosts, getPost, createPost, updatePost, deletePost } = require('../../controllers/blog.controller');
+const { listPosts, listAllPosts, getPost, createPost, updatePost, deletePost } = require('../../controllers/blog.controller');
 const { mockReq, mockRes, mockNext } = require('../helpers/mock-req-res');
 
 const POST = { id: 'pid-1', title: 'Mi Post', slug: 'mi-post', content: 'Contenido', published: false, publishedAt: null };
@@ -57,6 +57,43 @@ describe('blog.controller', () => {
     });
   });
 
+  describe('updatePost', () => {
+    it('editing the title keeps the original slug: the public URL is not rewritten', async () => {
+      prisma.blogPost.findUnique.mockResolvedValue(POST);
+      prisma.blogPost.update.mockResolvedValue({ ...POST, title: 'Mi Post corregido' });
+      const req = mockReq({ params: { id: 'pid-1' }, body: { title: 'Mi Post corregido', content: 'x' } });
+      const res = mockRes();
+      await updatePost(req, res, mockNext());
+      const call = prisma.blogPost.update.mock.calls[0][0];
+      expect(call.where).toEqual({ id: 'pid-1' });
+      expect(call.data.title).toBe('Mi Post corregido');
+      expect('slug' in call.data).toBe(false);
+      expect(prisma.blogPost.update).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('listAllPosts (admin surface)', () => {
+    it('returns every post, drafts included, with no filter', async () => {
+      prisma.blogPost.findMany.mockResolvedValue([POST]);
+      const res = mockRes();
+      await listAllPosts(mockReq({ user: { role: 'ADMIN' } }), res, mockNext());
+      const call = prisma.blogPost.findMany.mock.calls.at(-1)[0];
+      expect(call.where).toBeUndefined();
+      expect(res.json).toHaveBeenCalledWith([POST]);
+    });
+
+    it('never paginates, even when page is present', async () => {
+      prisma.blogPost.findMany.mockResolvedValue([POST]);
+      const res = mockRes();
+      await listAllPosts(mockReq({ user: { role: 'ADMIN' }, query: { page: '2' } }), res, mockNext());
+      const call = prisma.blogPost.findMany.mock.calls.at(-1)[0];
+      expect(call.skip).toBeUndefined();
+      expect(call.take).toBeUndefined();
+      expect(prisma.blogPost.count).not.toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith([POST]);
+    });
+  });
+
   describe('getPost', () => {
     it('returns 404 when not found', async () => {
       prisma.blogPost.findUnique.mockResolvedValue(null);
@@ -83,12 +120,17 @@ describe('blog.controller', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it('returns 409 on duplicate slug', async () => {
-      prisma.blogPost.create.mockRejectedValue(Object.assign(new Error(), { code: 'P2002' }));
+    it('allows a repeated title: retries with a suffixed slug instead of failing', async () => {
+      const collision = Object.assign(new Error(), { code: 'P2002', meta: { target: ['slug'] } });
+      prisma.blogPost.create
+        .mockRejectedValueOnce(collision)
+        .mockResolvedValue({ ...POST, slug: 'titulo-2' });
       const req = mockReq({ body: { title: 'Título', content: 'Texto' } });
       const res = mockRes();
       await createPost(req, res, mockNext());
-      expect(res.status).toHaveBeenCalledWith(409);
+      expect(prisma.blogPost.create.mock.calls.map((c) => c[0].data.slug)).toEqual(['titulo', 'titulo-2']);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.status).not.toHaveBeenCalledWith(409);
     });
 
     it('creates post with 201', async () => {
