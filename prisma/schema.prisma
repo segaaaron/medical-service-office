@@ -284,3 +284,22 @@ model ErrorLog {
   @@index([statusCode, createdAt(sort: Desc)])
   @@map("error_logs")
 }
+
+/// Contacto capturado por el formulario de la web antes de saltar a WhatsApp.
+/// La conversación sigue en WhatsApp; esto es el registro consultable de quién
+/// escribió, qué le interesaba y cuándo — antes vivía en una tabla que el
+/// frontend intentaba crear por su cuenta y que nunca llegó a existir.
+model Lead {
+  id            String   @id @default(uuid())
+  name          String   @db.VarChar(120)
+  phone         String?  @db.VarChar(30)
+  treatment     String?  @db.VarChar(150)
+  message       String?  @db.VarChar(2000)
+  preferredDate String?  @map("preferred_date") @db.VarChar(10)
+  source        String   @default("contact-form") @db.VarChar(60)
+  ipHash        String?  @map("ip_hash") @db.VarChar(64)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt(sort: Desc)])
+  @@map("leads")
+}

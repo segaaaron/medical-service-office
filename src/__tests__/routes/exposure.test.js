@@ -52,6 +52,18 @@ describe('exposición de la API', () => {
     });
   });
 
+  describe('leads del formulario web', () => {
+    it('GET /api/leads exige token: son datos de contacto de pacientes', async () => {
+      const res = await get('/api/leads');
+      expect(res.status).toBe(401);
+    });
+
+    it('GET /api/leads exige rol ADMIN', async () => {
+      const res = await get('/api/leads', sign('EDITOR'));
+      expect(res.status).toBe(403);
+    });
+  });
+
   describe('superficie de administración', () => {
     it.each([
       ['/api/admin/blog'],

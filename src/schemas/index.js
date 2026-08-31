@@ -298,6 +298,56 @@ const createBlogPostSchema = {
 };
 
 
+
+// ---------------------------------------------------------------------------
+// createLeadSchema
+// ---------------------------------------------------------------------------
+// Contacto del formulario público. Solo el nombre es obligatorio: cada campo
+// extra que se exige es una paciente menos que lo rellena, y la conversación
+// continúa en WhatsApp de todos modos.
+const LEAD_MAX = { name: 120, phone: 30, treatment: 150, message: 2000, source: 60 };
+
+function optionalText(data, field, max, out, errors, label) {
+  const value = data[field];
+  if (value === undefined || value === null || value === '') return;
+  if (!isString(value)) {
+    errors.push(err(field, `${label} debe ser texto`));
+    return;
+  }
+  const trimmed = value.trim();
+  if (trimmed.length > max) {
+    errors.push(err(field, `${label} excede el máximo de ${max} caracteres`));
+    return;
+  }
+  if (trimmed) out[field] = trimmed;
+}
+
+const createLeadSchema = {
+  validate(data) {
+    const errors = [];
+    const out = {};
+
+    if (!isString(data.name) || data.name.trim().length < 2 || data.name.trim().length > LEAD_MAX.name) {
+      errors.push(err('name', `El nombre es requerido (2 a ${LEAD_MAX.name} caracteres)`));
+    } else {
+      out.name = data.name.trim();
+    }
+
+    optionalText(data, 'phone', LEAD_MAX.phone, out, errors, 'El teléfono');
+    optionalText(data, 'treatment', LEAD_MAX.treatment, out, errors, 'El tratamiento');
+    optionalText(data, 'message', LEAD_MAX.message, out, errors, 'El mensaje');
+    optionalText(data, 'source', LEAD_MAX.source, out, errors, 'El origen');
+
+    // Fecha preferida: se acepta solo YYYY-MM-DD; cualquier otra cosa se ignora
+    // en lugar de rechazar el contacto entero por un campo secundario.
+    if (isString(data.preferredDate) && /^\d{4}-\d{2}-\d{2}$/.test(data.preferredDate.trim())) {
+      out.preferredDate = data.preferredDate.trim();
+    }
+
+    return errors.length ? { success: false, errors } : { success: true, data: out };
+  },
+};
+
 // ---------------------------------------------------------------------------
 // upsertSiteContentSchema
 // ---------------------------------------------------------------------------
@@ -902,4 +952,5 @@ module.exports = {
   upsertHomeSchema,
   createInviteSchema,
   submitInviteSchema,
+  createLeadSchema,
 };

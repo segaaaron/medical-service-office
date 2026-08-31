@@ -16,4 +16,14 @@ const validateRateLimiter = rateLimit({
   message: { error: 'RATE_LIMITED' },
 });
 
-module.exports = { validateRateLimiter, hashIp };
+// Alta de leads: un formulario legítimo se envía una vez, no diez por minuto.
+const leadRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => hashIp(ipKeyGenerator(req.ip)),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'RATE_LIMITED' },
+});
+
+module.exports = { validateRateLimiter, leadRateLimiter, hashIp };
