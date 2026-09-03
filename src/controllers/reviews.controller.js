@@ -29,14 +29,38 @@ function toAdminReview(r) {
   };
 }
 
+/**
+ * Reseñas públicas por página.
+ *
+ * El tope era 20 sin paginar: al pasar de esa cifra las reseñas más antiguas
+ * dejaban de existir para el sitio, sin aviso. Se pagina con el mismo contrato
+ * que `/treatments` para no inventar una convención nueva:
+ *
+ *   - sin `?page`  → objeto con las 20 más recientes y el agregado (compatible
+ *                    con lo que el sitio ya consume hoy).
+ *   - con `?page=N` → añade `total`, `page`, `limit` y `totalPages`.
+ *
+ * El agregado se calcula SIEMPRE sobre todas las aprobadas, no sobre la página:
+ * es la nota media del consultorio, no la de un tramo.
+ */
+// Seis: dos filas exactas en la rejilla de tres columnas del sitio. Con 9 la
+// última fila quedaba coja en escritorio.
+const PUBLIC_REVIEWS_PAGE_SIZE = 6;
+
 // GET /api/reviews/public — público
 async function listPublicReviews(req, res, next) {
   try {
+    const paginado = req.query.page !== undefined;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = paginado ? PUBLIC_REVIEWS_PAGE_SIZE : 20;
+    const skip = paginado ? (page - 1) * limit : 0;
+
     const [reviews, aggregate] = await Promise.all([
       prisma.review.findMany({
         where:   { status: 'approved' },
         orderBy: { approvedAt: 'desc' },
-        take:    20,
+        skip,
+        take:    limit,
         select: {
           id: true, patientName: true, patientLastname: true, treatment: true,
           body: true, rating: true, approvedAt: true,
@@ -49,14 +73,19 @@ async function listPublicReviews(req, res, next) {
       }),
     ]);
 
+    const total = aggregate._count.id;
+
     return res.json({
       reviews: reviews.map(toPublicReview),
       aggregate: {
         avg_rating:  aggregate._avg.rating
           ? Math.round(aggregate._avg.rating * 10) / 10
           : null,
-        total_count: aggregate._count.id,
+        total_count: total,
       },
+      ...(paginado
+        ? { total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) }
+        : {}),
     });
   } catch (err) {
     next(err);

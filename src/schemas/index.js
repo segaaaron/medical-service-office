@@ -489,6 +489,28 @@ const upsertContactSchema = {
       out.facebookUrl = data.facebookUrl.trim();
     }
 
+    // TikTok es opcional: el consultorio puede no tener perfil. Solo se valida
+    // el formato cuando llega con contenido; vacío se guarda como null para no
+    // dejar una cadena vacía que el frontend tendría que interpretar.
+    if (data.tiktokUsername !== undefined && data.tiktokUsername !== null) {
+      if (!isString(data.tiktokUsername)) {
+        errors.push(err('tiktokUsername', 'El usuario de TikTok debe ser texto'));
+      } else {
+        out.tiktokUsername = data.tiktokUsername.trim() || null;
+      }
+    }
+
+    if (data.tiktokUrl !== undefined && data.tiktokUrl !== null) {
+      const raw = isString(data.tiktokUrl) ? data.tiktokUrl.trim() : '';
+      if (raw === '') {
+        out.tiktokUrl = null;
+      } else if (!URL_RE.test(raw)) {
+        errors.push(err('tiktokUrl', 'El enlace de TikTok debe ser una URL válida'));
+      } else {
+        out.tiktokUrl = raw;
+      }
+    }
+
     if (!isString(data.mondayFridayHours) || data.mondayFridayHours.trim().length < 1) {
       errors.push(err('mondayFridayHours', 'El horario de lunes a viernes es requerido'));
     } else {
@@ -613,7 +635,7 @@ const upsertAboutUsSchema = {
 // ---------------------------------------------------------------------------
 const FOOTER_STRING_FIELDS = [
   'doctorName', 'specialty', 'description',
-  'whatsappUrl', 'facebookUrl', 'instagramUrl',
+  'whatsappUrl', 'facebookUrl', 'instagramUrl', 'tiktokUrl',
   'copyrightText', 'designedByText',
 ];
 const FOOTER_JSON_FIELDS = ['facialTreatments', 'bodyTreatments', 'officeLinks', 'legalLinks'];

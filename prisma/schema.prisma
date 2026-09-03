@@ -37,19 +37,19 @@ model RefreshToken {
 }
 
 model Treatment {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
-  price       Float?
-  tag         String?
-  imageUrl    String?
-  beforeImageUrl String? @map("before_image_url")
-  afterImageUrl  String? @map("after_image_url")
-  active      Boolean  @default(false)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  price          Float?
+  tag            String?
+  imageUrl       String?
+  beforeImageUrl String?  @map("before_image_url")
+  afterImageUrl  String?  @map("after_image_url")
+  active         Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([active])
   @@index([order])
@@ -83,6 +83,8 @@ model Contact {
   instagramUrl        String
   facebookName        String
   facebookUrl         String
+  tiktokUsername      String?
+  tiktokUrl           String?
   mondayFridayHours   String
   saturdayHours       String
   sundayStatus        String
@@ -113,6 +115,7 @@ model Footer {
   whatsappUrl      String?
   facebookUrl      String?
   instagramUrl     String?
+  tiktokUrl        String?
   facialTreatments Json?
   bodyTreatments   Json?
   officeLinks      Json?
