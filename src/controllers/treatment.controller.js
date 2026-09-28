@@ -6,6 +6,7 @@ const { deleteUploadedFile } = require('../middlewares/upload.middleware');
 
 // Tamaño de página fijado por el backend (el frontend no lo envía).
 const TREATMENT_PAGE_SIZE = 8;
+const SEO_FIELDS = ['seoTitle', 'seoDescription', 'ogImageUrl'];
 // Orden determinístico para que no se repitan/falten items entre páginas.
 const TREATMENT_ORDER_BY = [{ order: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }];
 
@@ -90,6 +91,9 @@ async function createTreatment(req, res, next) {
         beforeImageUrl: beforeImageUrl || null,
         afterImageUrl: afterImageUrl || null,
         active: active ?? false,
+        seoTitle: req.body.seoTitle ?? null,
+        seoDescription: req.body.seoDescription ?? null,
+        ogImageUrl: req.body.ogImageUrl ?? null,
       },
     }));
     return res.status(201).json(treatment);
@@ -136,6 +140,7 @@ async function updateTreatment(req, res, next) {
     applyImageUpdate(data, 'afterImageUrl', req.body.afterImageUrl, current, filesToDelete);
 
     if (active !== undefined) data.active = active;
+    for (const f of SEO_FIELDS) if (req.body[f] !== undefined) data[f] = req.body[f];
 
     // Sin slug en `data` la escritura no puede chocar con el índice UNIQUE.
     const treatment = await prisma.treatment.update({ where: { id: req.params.id }, data });

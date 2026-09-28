@@ -59,6 +59,36 @@ function err(field, message) {
   return { field, message };
 }
 
+// Nombre/título visible: trim + espacios repetidos colapsados. No toca
+// mayúsculas (la doctora escribe así sus nombres clínicos).
+function cleanName(v) {
+  return v.replace(/\s+/g, ' ').trim();
+}
+
+// SEO de Treatment y BlogPost. Ausente = no tocar; null/""/solo espacios = null.
+const SEO_MAX = { seoTitle: 70, seoDescription: 170 };
+function seoFields(data, out, errors) {
+  for (const field of ['seoTitle', 'seoDescription', 'ogImageUrl']) {
+    const v = data[field];
+    if (v === undefined) continue;
+    if (v === null || (isString(v) && v.trim() === '')) { out[field] = null; continue; }
+    if (!isString(v)) { errors.push(err(field, `${field} debe ser texto`)); continue; }
+    const t = v.trim();
+    if (field === 'ogImageUrl') {
+      // Largo antes del regex: URL_RE es cuadrático con entradas largas.
+      if (t.length > 2048 || (!URL_RE.test(t) && !UPLOAD_URL_RE.test(t))) {
+        errors.push(err(field, 'ogImageUrl debe ser una URL http(s) o una ruta de /uploads/'));
+      } else {
+        out[field] = t;
+      }
+    } else if (t.length > SEO_MAX[field]) {
+      errors.push(err(field, `${field} admite máximo ${SEO_MAX[field]} caracteres`));
+    } else {
+      out[field] = t;
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // loginSchema
 // ---------------------------------------------------------------------------
@@ -91,10 +121,10 @@ const createTreatmentSchema = {
     const errors = [];
     const out = {};
 
-    if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 200) {
+    if (!isString(data.name) || cleanName(data.name).length < 1 || cleanName(data.name).length > 200) {
       errors.push(err('name', 'El nombre del tratamiento es requerido (máximo 200 caracteres)'));
     } else {
-      out.name = data.name.trim();
+      out.name = cleanName(data.name);
     }
 
     if (data.tag !== undefined && data.tag !== null && data.tag !== '') {
@@ -143,6 +173,8 @@ const createTreatmentSchema = {
       }
     }
 
+    seoFields(data, out, errors);
+
     if (data.active !== undefined) {
       if (data.active === true || data.active === 'true') {
         out.active = true;
@@ -166,10 +198,10 @@ const updateTreatmentSchema = {
     const out = {};
 
     if (data.name !== undefined && data.name !== null) {
-      if (!isString(data.name) || data.name.trim().length < 1 || data.name.trim().length > 200) {
+      if (!isString(data.name) || cleanName(data.name).length < 1 || cleanName(data.name).length > 200) {
         errors.push(err('name', 'El nombre debe tener entre 1 y 200 caracteres'));
       } else {
-        out.name = data.name.trim();
+        out.name = cleanName(data.name);
       }
     }
 
@@ -225,6 +257,8 @@ const updateTreatmentSchema = {
       }
     }
 
+    seoFields(data, out, errors);
+
     if (data.active !== undefined) {
       if (data.active === true || data.active === 'true') {
         out.active = true;
@@ -251,10 +285,10 @@ const createBlogPostSchema = {
     const errors = [];
     const out = {};
 
-    if (!isString(data.title) || data.title.trim().length < 1 || data.title.trim().length > 300) {
+    if (!isString(data.title) || cleanName(data.title).length < 1 || cleanName(data.title).length > 300) {
       errors.push(err('title', 'El título es requerido (máximo 300 caracteres)'));
     } else {
-      out.title = data.title.trim();
+      out.title = cleanName(data.title);
     }
 
     if (!isString(data.content) || data.content.trim().length < 1) {
@@ -282,6 +316,8 @@ const createBlogPostSchema = {
     } else {
       out.imageUrl = data.imageUrl ?? '';
     }
+
+    seoFields(data, out, errors);
 
     if (data.published !== undefined) {
       if (data.published === true || data.published === 'true') {
@@ -388,10 +424,10 @@ const updateBlogPostSchema = {
     const out = {};
 
     if (data.title !== undefined && data.title !== null) {
-      if (!isString(data.title) || data.title.trim().length < 1 || data.title.trim().length > 300) {
+      if (!isString(data.title) || cleanName(data.title).length < 1 || cleanName(data.title).length > 300) {
         errors.push(err('title', 'El título debe tener entre 1 y 300 caracteres'));
       } else {
-        out.title = data.title.trim();
+        out.title = cleanName(data.title);
       }
     }
 
@@ -420,6 +456,8 @@ const updateBlogPostSchema = {
         out.imageUrl = data.imageUrl;
       }
     }
+
+    seoFields(data, out, errors);
 
     if (data.published !== undefined && data.published !== null) {
       if (data.published === true || data.published === 'true') {

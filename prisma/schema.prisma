@@ -46,6 +46,9 @@ model Treatment {
   imageUrl       String?
   beforeImageUrl String?  @map("before_image_url")
   afterImageUrl  String?  @map("after_image_url")
+  seoTitle       String?  @map("seo_title")
+  seoDescription String?  @map("seo_description")
+  ogImageUrl     String?  @map("og_image_url")
   active         Boolean  @default(false)
   order          Int      @default(0)
   createdAt      DateTime @default(now())
@@ -57,16 +60,19 @@ model Treatment {
 }
 
 model BlogPost {
-  id          String    @id @default(uuid())
-  title       String
-  slug        String    @unique
-  excerpt     String?
-  content     String
-  imageUrl    String?
-  published   Boolean   @default(false)
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  title          String
+  slug           String    @unique
+  excerpt        String?
+  content        String
+  imageUrl       String?
+  seoTitle       String?   @map("seo_title")
+  seoDescription String?   @map("seo_description")
+  ogImageUrl     String?   @map("og_image_url")
+  published      Boolean   @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([published])
   @@index([publishedAt])

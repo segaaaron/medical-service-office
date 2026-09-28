@@ -12,7 +12,10 @@ const BLOG_SELECT = {
   id: true, title: true, slug: true, excerpt: true,
   content: true, imageUrl: true, published: true,
   publishedAt: true, createdAt: true,
+  seoTitle: true, seoDescription: true, ogImageUrl: true,
 };
+
+const SEO_FIELDS = ['seoTitle', 'seoDescription', 'ogImageUrl'];
 
 async function listPosts(req, res, next) {
   try {
@@ -95,6 +98,9 @@ async function createPost(req, res, next) {
         imageUrl: imageUrl || null,
         published: published ?? false,
         publishedAt: published ? new Date() : null,
+        seoTitle: req.body.seoTitle ?? null,
+        seoDescription: req.body.seoDescription ?? null,
+        ogImageUrl: req.body.ogImageUrl ?? null,
       },
     }));
     return res.status(201).json(post);
@@ -135,6 +141,8 @@ async function updatePost(req, res, next) {
       }
       data.imageUrl = imageUrl || null;
     }
+
+    for (const f of SEO_FIELDS) if (req.body[f] !== undefined) data[f] = req.body[f];
 
     if (published !== undefined) {
       data.published = published;
